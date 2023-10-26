@@ -3,7 +3,7 @@ package net.glasslauncher.hmifabric;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.glasslauncher.hmifabric.event.HMITabRegistryEvent;
-import net.glasslauncher.hmifabric.mixin.DrawableHelperAccessor;
+import net.glasslauncher.hmifabric.mixin.access.DrawableHelperAccessor;
 import net.glasslauncher.hmifabric.tabs.Tab;
 import net.glasslauncher.hmifabric.tabs.TabCrafting;
 import net.glasslauncher.hmifabric.tabs.TabRegistry;
@@ -22,7 +22,6 @@ import net.modificationstation.stationapi.api.mod.entrypoint.Entrypoint;
 import net.modificationstation.stationapi.api.registry.Identifier;
 import net.modificationstation.stationapi.api.registry.ModID;
 import net.modificationstation.stationapi.api.registry.Registry;
-import net.modificationstation.stationapi.api.util.Null;
 import org.lwjgl.input.Mouse;
 
 import java.util.*;

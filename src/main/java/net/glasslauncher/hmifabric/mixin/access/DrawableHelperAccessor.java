@@ -1,4 +1,4 @@
-package net.glasslauncher.hmifabric.mixin;
+package net.glasslauncher.hmifabric.mixin.access;
 
 import net.minecraft.client.gui.DrawableHelper;
 import org.spongepowered.asm.mixin.Mixin;

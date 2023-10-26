@@ -1,5 +1,6 @@
 package net.glasslauncher.hmifabric;
 
+import net.glasslauncher.hmifabric.mixin.access.ContainerBaseAccessor;
 import net.glasslauncher.hmifabric.tabs.Tab;
 import net.glasslauncher.hmifabric.tabs.TabWithTexture;
 import net.minecraft.client.gui.screen.ScreenBase;
@@ -11,13 +12,10 @@ import net.minecraft.item.ItemInstance;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import java.lang.reflect.*;
 import java.util.*;
 
 
 public class GuiRecipeViewer extends ContainerBase {
-    private static Field xSizeField = Utils.getField(ContainerBase.class, new String[]{"field_1152", "containerWidth", "a"});
-
     public GuiRecipeViewer(ItemInstance itemstack, Boolean getUses, ScreenBase parent) {
         super(container = new ContainerRecipeViewer(inv = new InventoryRecipeViewer(itemstack)));
         this.parent = parent;
@@ -39,7 +37,7 @@ public class GuiRecipeViewer extends ContainerBase {
         } else {
             if (parent instanceof ContainerBase) {
                 try {
-                    containerWidth = xSizeField.getInt(parent);
+                    containerWidth = ((ContainerBaseAccessor) parent).getContainerWidth();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

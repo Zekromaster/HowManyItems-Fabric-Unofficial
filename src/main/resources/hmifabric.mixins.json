@@ -4,12 +4,15 @@
   "package": "net.glasslauncher.hmifabric.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "DrawableHelperAccessor",
+    "access.DrawableHelperAccessor",
+    "access.LevelAccessor",
     "MixinItemBase"
   ],
   "server": [
   ],
   "client": [
+    "access.ContainerBaseAccessor",
+    "access.ScreenBaseAccessor",
     "MixinContainerBase",
     "MixinGameRenderer",
     "MixinRecipeRegistry"

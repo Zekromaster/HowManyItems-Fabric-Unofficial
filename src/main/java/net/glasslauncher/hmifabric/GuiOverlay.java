@@ -1,5 +1,8 @@
 package net.glasslauncher.hmifabric;
 
+import net.glasslauncher.hmifabric.mixin.access.ContainerBaseAccessor;
+import net.glasslauncher.hmifabric.mixin.access.LevelAccessor;
+import net.glasslauncher.hmifabric.mixin.access.ScreenBaseAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ScreenBase;
 import net.minecraft.client.gui.screen.container.ContainerBase;
@@ -9,7 +12,6 @@ import net.minecraft.client.util.ScreenScaler;
 import net.minecraft.container.slot.Slot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemInstance;
-import net.minecraft.level.Level;
 import net.minecraft.level.LevelProperties;
 import net.minecraft.util.CharacterUtils;
 import net.modificationstation.stationapi.api.packet.Message;
@@ -18,9 +20,11 @@ import net.modificationstation.stationapi.api.registry.Identifier;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
-import java.lang.reflect.*;
-import java.text.*;
-import java.util.*;
+import java.text.MessageFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 
 public class GuiOverlay extends ScreenBase {
 
@@ -65,20 +69,11 @@ public class GuiOverlay extends ScreenBase {
         init(Utils.getMC(), screen.width, screen.height);
 
     }
-
-    private static Field xSizeField = Utils.getField(ContainerBase.class, new String[] {"containerWidth", "field_1152"});
-    private static Field ySizeField = Utils.getField(ContainerBase.class, new String[] {"containerHeight", "field_1153"});
-    private static Method mouseClickedMethod = Utils.getMethod(ScreenBase.class, new String[] {"mouseClicked", "method_124"}, new Class<?>[] {int.class, int.class, int.class});
-    private static Method keyTypedMethod = Utils.getMethod(ScreenBase.class, new String[] {"keyPressed", "method_117"}, new Class<?>[] {char.class, int.class});
-    private static Method mouseMovedOrUpMethod = Utils.getMethod(ScreenBase.class, new String[] {"mouseReleased", "method_128"}, new Class<?>[] {int.class, int.class, int.class});
-
-    private static Field worldInfoField = Utils.getField(Level.class, new String[] {"properties", "field_220"});
-
     @Override
     public void init() {
         try {
-            xSize = xSizeField.getInt(screen);
-            ySize = ySizeField.getInt(screen);
+            xSize = ((ContainerBaseAccessor) screen).getContainerWidth();
+            ySize = ((ContainerBaseAccessor) screen).getContainerHeight();
         }
         catch (Exception e) { e.printStackTrace(); }
         buttons.clear();
@@ -486,7 +481,7 @@ public class GuiOverlay extends ScreenBase {
                 }
                 if (!searchBox.hovered(posX, posY))
                     try {
-                        mouseClickedMethod.invoke(screen, posX, posY, eventButton);
+                        ((ScreenBaseAccessor) screen).invokeMouseClicked(posX, posY, eventButton);
                     }
                     catch (Exception e) { e.printStackTrace(); }
             }
@@ -526,7 +521,7 @@ public class GuiOverlay extends ScreenBase {
             if(!minecraft.level.isServerSide) {
 
                 try {
-                    LevelProperties worldInfo = (LevelProperties)worldInfoField.get(minecraft.level);
+                    LevelProperties worldInfo = ((LevelAccessor) minecraft.level).getProperties();
                     if(guibutton == buttonTimeDay) {
                         long l = worldInfo.getTime() + 24000L;
                         worldInfo.setTime(l - l % 24000L);
@@ -541,7 +536,6 @@ public class GuiOverlay extends ScreenBase {
                     }
                 }
                 catch (IllegalArgumentException e) { e.printStackTrace(); }
-                catch (IllegalAccessException e) { e.printStackTrace(); }
             }
             else {
                 if(guibutton == buttonTimeDay) {
@@ -552,7 +546,7 @@ public class GuiOverlay extends ScreenBase {
                 }
                 else if(guibutton == buttonToggleRain) {
                     try {
-                        LevelProperties worldInfo = (LevelProperties)worldInfoField.get(minecraft.level);
+                        LevelProperties worldInfo = ((LevelAccessor) minecraft.level).getProperties();
                         if(worldInfo.isRaining()) {
                             minecraft.player.sendChatMessage(Config.config.mpRainOFFCommand);
                         }
@@ -561,7 +555,6 @@ public class GuiOverlay extends ScreenBase {
                         }
                     }
                     catch (IllegalArgumentException e) { e.printStackTrace(); }
-                    catch (IllegalAccessException e) { e.printStackTrace(); }
                 }
             }
         }
@@ -682,7 +675,7 @@ public class GuiOverlay extends ScreenBase {
             }
             else {
                 try {
-                    keyTypedMethod.invoke(screen, new Object[] {c, i});
+                    ((ScreenBaseAccessor) screen).invokeKeyPressed(c, i);
                 } catch (Exception e) { e.printStackTrace(); }
             }
         }
@@ -719,7 +712,7 @@ public class GuiOverlay extends ScreenBase {
     {
         super.mouseReleased(i, j, k);
         try {
-            mouseMovedOrUpMethod.invoke(screen, new Object[] {i, j, k});
+            ((ScreenBaseAccessor) screen).invokeMouseReleased(i, j, k);
         } catch (Exception e) { e.printStackTrace(); }
     }
 

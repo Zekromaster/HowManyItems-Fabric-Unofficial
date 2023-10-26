@@ -1,6 +1,7 @@
 package net.glasslauncher.hmifabric;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.glasslauncher.hmifabric.mixin.access.ContainerBaseAccessor;
 import net.glasslauncher.hmifabric.tabs.Tab;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.DrawableHelper;
@@ -23,7 +24,6 @@ import java.util.*;
 
 public class Utils {
     private static ArrayList<ItemInstance> allItems;
-    private static Method getSlotAtPositionMethod = getMethod(ContainerBase.class, new String[]{"getSlot", "method_986"}, new Class<?>[]{int.class, int.class});
     public static ItemRenderer itemRenderer = new ItemRenderer();
     public static Random rand = new Random();
     public static DrawableHelper gui = new DrawableHelper();
@@ -36,33 +36,6 @@ public class Utils {
     private static final List<String> loadedResources = new ArrayList<>();
     private static final List<String> missingResources = new ArrayList<>();
     private static final String resourcesFolder = "/hmi/resources/";
-
-    //clean mine_diver code
-    //Used for easy reflection with obfuscated or regular fields
-    public static Field getField(Class<?> target, String names[]) {
-        for (Field field : target.getDeclaredFields()) {
-            for (String name : names) {
-                if (field.getName().equals(name)) {
-                    field.setAccessible(true);
-                    return field;
-                }
-            }
-        }
-        return null;
-    }
-
-    //clean mine_diver code
-    //Used for easy reflection with obfuscated or regular methods
-    public static Method getMethod(Class<?> target, String names[], Class<?> types[]) {
-        for (String name : names) {
-            try {
-                Method method = target.getDeclaredMethod(name, types);
-                method.setAccessible(true);
-                return method;
-            } catch (NoSuchMethodException e) { /* Do nothing */}
-        }
-        return null;
-    }
 
     //Returns the translated name of an itemstack with its ID if config allows and ID is wanted
     public static String getNiceItemName(ItemInstance item, boolean withID) {
@@ -86,7 +59,7 @@ public class Utils {
     //Returns the item that the user is hovering in their inventory
     public static ItemInstance hoveredItem(ContainerBase gui, int posX, int posY) {
         try {
-            Slot slotAtPosition = (Slot) getSlotAtPositionMethod.invoke(gui, new Object[]{posX, posY});
+            Slot slotAtPosition = ((ContainerBaseAccessor) gui).invokeGetSlot(posX, posY);
             if (slotAtPosition != null) return slotAtPosition.getItem();
         } catch (Exception e) {
             e.printStackTrace();
