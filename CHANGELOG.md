@@ -1,5 +1,8 @@
 # Changelog
 
+## [5.1.0]
+- Updated to latest StAPI (2.0-alpha.1)
+
 ## [5.0.3]
 - Added control-clicking the settings button to toggle cheat mode.
 - Removed meta giving in MP temporarily.

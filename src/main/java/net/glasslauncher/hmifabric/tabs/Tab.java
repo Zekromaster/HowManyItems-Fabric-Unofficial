@@ -1,15 +1,15 @@
 package net.glasslauncher.hmifabric.tabs;
 
-import net.minecraft.client.gui.screen.container.ContainerBase;
+import net.minecraft.client.gui.screen.container.ContainerScreen;
 import net.minecraft.client.resource.language.TranslationStorage;
-import net.minecraft.item.ItemInstance;
-import net.modificationstation.stationapi.api.registry.ModID;
+import net.minecraft.item.ItemStack;
+import net.modificationstation.stationapi.api.util.Namespace;
 
 import java.util.*;
 
 public abstract class Tab {
 
-    public Tab(ModID tabCreator, int slotsPerRecipe, int width, int height, int minPaddingX, int minPaddingY) {
+    public Tab(Namespace tabCreator, int slotsPerRecipe, int width, int height, int minPaddingX, int minPaddingY) {
         slots = new Integer[slotsPerRecipe][];
         WIDTH = width;
         HEIGHT = height;
@@ -18,15 +18,15 @@ public abstract class Tab {
         TAB_CREATOR = tabCreator;
     }
 
-    public abstract ItemInstance getTabItem();
+    public abstract ItemStack getTabItem();
 
-    public abstract ItemInstance[][] getItems(int index, ItemInstance filter);
+    public abstract ItemStack[][] getItems(int index, ItemStack filter);
 
     public int size;
 
-    public void updateRecipes(ItemInstance filter, Boolean getUses) {
+    public void updateRecipes(ItemStack filter, Boolean getUses) {
         if (size == 0 && getUses) {
-            for (ItemInstance craftingStation : equivalentCraftingStations) {
+            for (ItemStack craftingStation : equivalentCraftingStations) {
                 if (filter.itemId == craftingStation.itemId && filter.getDamage() == craftingStation.getDamage()) {
                     updateRecipes(null, getUses);
                     break;
@@ -40,12 +40,12 @@ public abstract class Tab {
     public abstract void draw(int x, int y, int recipeOnThisPageIndex, int cursorX, int cursorY);
 
     public String name() {
-        return TranslationStorage.getInstance().method_995(getTabItem().getTranslationKey());
+        return TranslationStorage.getInstance().getClientTranslation(getTabItem().getTranslationKey());
     }
 
-    public abstract Class<? extends ContainerBase> getGuiClass();
+    public abstract Class<? extends ContainerScreen> getGuiClass();
 
-    public ArrayList<ItemInstance> equivalentCraftingStations = new ArrayList<>();
+    public ArrayList<ItemStack> equivalentCraftingStations = new ArrayList<>();
 
     public int index = -2;
     public int recipesPerPage = 1;
@@ -56,7 +56,7 @@ public abstract class Tab {
     public int autoX = 1;
     public int autoY = 2;
 
-    public final ModID TAB_CREATOR;
+    public final Namespace TAB_CREATOR;
 
     public Integer[][] slots;
 

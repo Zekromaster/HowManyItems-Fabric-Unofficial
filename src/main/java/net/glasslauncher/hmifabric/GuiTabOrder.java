@@ -1,9 +1,9 @@
 package net.glasslauncher.hmifabric;
 
 import net.glasslauncher.hmifabric.tabs.Tab;
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.gui.widgets.Button;
-import net.minecraft.client.gui.widgets.OptionButton;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.OptionButtonWidget;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.resource.language.TranslationStorage;
 import org.lwjgl.input.Mouse;
@@ -11,8 +11,8 @@ import org.lwjgl.opengl.GL11;
 
 import java.util.*;
 
-public class GuiTabOrder extends ScreenBase {
-    private ScreenBase parentScreen;
+public class GuiTabOrder extends Screen {
+    private Screen parentScreen;
 
     private int right;
     private int bottom;
@@ -35,7 +35,7 @@ public class GuiTabOrder extends ScreenBase {
     private Tab[] newOrder;
     private boolean[] tabEnabled;
 
-    public GuiTabOrder(ScreenBase guiscreen) {
+    public GuiTabOrder(Screen guiscreen) {
         initialClickY = -2F;
         lastClicked = 0L;
         parentScreen = guiscreen;
@@ -57,41 +57,41 @@ public class GuiTabOrder extends ScreenBase {
             newOrder[i] = currentTabs.get(i);
             tabEnabled[i] = true;
             buttons.add(new GuiButtonHMI(buttons.size(), -1, -1, BUTTON_HEIGHT, 3));
-            if (i == 0) ((Button) buttons.get(buttons.size() - 1)).active = false;
+            if (i == 0) ((ButtonWidget) buttons.get(buttons.size() - 1)).active = false;
             buttons.add(new GuiButtonHMI(buttons.size(), -1, -1, BUTTON_HEIGHT, 4));
             String s = currentTabs.get(i).TAB_CREATOR.getClass().getSimpleName().replaceFirst("mod_", "");
             s += " - " + currentTabs.get(i).name() + ": Enabled";
-            buttons.add(new OptionButton(buttons.size(), -1, -1, 268, BUTTON_HEIGHT, s));
+            buttons.add(new OptionButtonWidget(buttons.size(), -1, -1, 268, BUTTON_HEIGHT, s));
         }
         for (int i = 0; i < allTabs.size(); i++) {
             if (!currentTabs.contains(allTabs.get(i))) {
                 newOrder[buttons.size() / 3] = allTabs.get(i);
                 tabEnabled[buttons.size() / 3] = false;
                 buttons.add(new GuiButtonHMI(buttons.size(), -1, -1, BUTTON_HEIGHT, 3));
-                ((Button) buttons.get(buttons.size() - 1)).active = false;
+                ((ButtonWidget) buttons.get(buttons.size() - 1)).active = false;
                 buttons.add(new GuiButtonHMI(buttons.size(), -1, -1, BUTTON_HEIGHT, 4));
-                ((Button) buttons.get(buttons.size() - 1)).active = false;
+                ((ButtonWidget) buttons.get(buttons.size() - 1)).active = false;
                 String s = allTabs.get(i).TAB_CREATOR.getClass().getSimpleName().replaceFirst("mod_", "");
                 s += " - " + allTabs.get(i).name() + ": Disabled";
-                buttons.add(new OptionButton(buttons.size(), -1, -1, 268, BUTTON_HEIGHT, s));
+                buttons.add(new OptionButtonWidget(buttons.size(), -1, -1, 268, BUTTON_HEIGHT, s));
             }
         }
-        if (buttons.size() >= 3) ((Button) buttons.get(buttons.size() - 2)).active = false;
+        if (buttons.size() >= 3) ((ButtonWidget) buttons.get(buttons.size() - 2)).active = false;
 
         TranslationStorage stringtranslate = TranslationStorage.getInstance();
-        buttons.add(new OptionButton(buttons.size(), width / 2 - 154, height - 39, "Gui Size: " + (Config.config.recipeViewerDraggableGui ? "Draggable" : "Auto")));
-        buttons.add(new OptionButton(buttons.size(), width / 2 + 4, height - 39, stringtranslate.translate("gui.done")));
+        buttons.add(new OptionButtonWidget(buttons.size(), width / 2 - 154, height - 39, "Gui Size: " + (Config.config.recipeViewerDraggableGui ? "Draggable" : "Auto")));
+        buttons.add(new OptionButtonWidget(buttons.size(), width / 2 + 4, height - 39, stringtranslate.get("gui.done")));
     }
 
     @Override
-    public void onClose() {
+    public void removed() {
         HowManyItemsClient.tabOrderChanged(tabEnabled, newOrder);
     }
 
     @Override
-    protected void buttonClicked(Button guibutton) {
+    protected void buttonClicked(ButtonWidget guibutton) {
         if (guibutton.id == buttons.size() - 1) {
-            minecraft.openScreen(parentScreen);
+            minecraft.setScreen(parentScreen);
         } else if (guibutton.id == buttons.size() - 2) {
             Config.config.recipeViewerDraggableGui = !Config.config.recipeViewerDraggableGui;
             guibutton.text = "Gui Size: " + (Config.config.recipeViewerDraggableGui ? "Draggable" : "Auto");
@@ -124,15 +124,15 @@ public class GuiTabOrder extends ScreenBase {
                 Tab tempTab = newOrder[index];
                 newOrder[index] = newOrder[index + upOrDown];
                 newOrder[index + upOrDown] = tempTab;
-                String tempString = ((Button) buttons.get(index * 3 + 2)).text;
-                ((Button) buttons.get(index * 3 + 2)).text = ((Button) buttons.get((index + upOrDown) * 3 + 2)).text;
-                ((Button) buttons.get((index + upOrDown) * 3 + 2)).text = tempString;
+                String tempString = ((ButtonWidget) buttons.get(index * 3 + 2)).text;
+                ((ButtonWidget) buttons.get(index * 3 + 2)).text = ((ButtonWidget) buttons.get((index + upOrDown) * 3 + 2)).text;
+                ((ButtonWidget) buttons.get((index + upOrDown) * 3 + 2)).text = tempString;
             }
             for (int i = 0; i < newOrder.length; i++) {
-                ((Button) buttons.get(i * 3)).active = tabEnabled[i];
-                ((Button) buttons.get(i * 3 + 1)).active = tabEnabled[i];
-                if (i == 0) ((Button) buttons.get(i * 3)).active = false;
-                else if (i == newOrder.length - 1) ((Button) buttons.get(i * 3 + 1)).active = false;
+                ((ButtonWidget) buttons.get(i * 3)).active = tabEnabled[i];
+                ((ButtonWidget) buttons.get(i * 3 + 1)).active = tabEnabled[i];
+                if (i == 0) ((ButtonWidget) buttons.get(i * 3)).active = false;
+                else if (i == newOrder.length - 1) ((ButtonWidget) buttons.get(i * 3 + 1)).active = false;
             }
         }
     }
@@ -252,8 +252,8 @@ public class GuiTabOrder extends ScreenBase {
         GL11.glBindTexture(3553 /*GL_TEXTURE_2D*/, minecraft.textureManager.getTextureId("/gui/background.png"));
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         float f1 = 32F;
-        tessellator.start();
-        tessellator.colour(0x202020);
+        tessellator.startQuads();
+        tessellator.color(0x202020);
         tessellator.vertex(left, bottom, 0.0D, (float) left / f1, (float) (bottom + (int) amountScrolled) / f1);
         tessellator.vertex(right, bottom, 0.0D, (float) right / f1, (float) (bottom + (int) amountScrolled) / f1);
         tessellator.vertex(right, top, 0.0D, (float) right / f1, (float) (top + (int) amountScrolled) / f1);
@@ -276,7 +276,7 @@ public class GuiTabOrder extends ScreenBase {
 
                 if (i < buttons.size()) {
                     //drawString(fontRenderer, options.getKeyBindingDescription(i), left2 + offset + 70 + 6, k3 + 7, -1);
-                    Button button = (Button) buttons.get(i);
+                    ButtonWidget button = (ButtonWidget) buttons.get(i);
                     if (selectedButton == i) {
                         //button.text = "\247f> \247e??? \247f<";
                         //} else if (duplicate && options.keyBindings[i].keyCode != 0) {
@@ -300,19 +300,19 @@ public class GuiTabOrder extends ScreenBase {
         GL11.glDisable(3008 /*GL_ALPHA_TEST*/);
         GL11.glShadeModel(7425 /*GL_SMOOTH*/);
         GL11.glDisable(3553 /*GL_TEXTURE_2D*/);
-        tessellator.start();
-        tessellator.colour(0, 0);
+        tessellator.startQuads();
+        tessellator.color(0, 0);
         tessellator.vertex(left, top + byte0, 0.0D, 0.0D, 1.0D);
         tessellator.vertex(right, top + byte0, 0.0D, 1.0D, 1.0D);
-        tessellator.colour(0, 255);
+        tessellator.color(0, 255);
         tessellator.vertex(right, top, 0.0D, 1.0D, 0.0D);
         tessellator.vertex(left, top, 0.0D, 0.0D, 0.0D);
         tessellator.draw();
-        tessellator.start();
-        tessellator.colour(0, 255);
+        tessellator.startQuads();
+        tessellator.color(0, 255);
         tessellator.vertex(left, bottom, 0.0D, 0.0D, 1.0D);
         tessellator.vertex(right, bottom, 0.0D, 1.0D, 1.0D);
-        tessellator.colour(0, 0);
+        tessellator.color(0, 0);
         tessellator.vertex(right, bottom - byte0, 0.0D, 1.0D, 0.0D);
         tessellator.vertex(left, bottom - byte0, 0.0D, 0.0D, 0.0D);
         tessellator.draw();
@@ -329,22 +329,22 @@ public class GuiTabOrder extends ScreenBase {
             if (i5 < top) {
                 i5 = top;
             }
-            tessellator.start();
-            tessellator.colour(0, 255);
+            tessellator.startQuads();
+            tessellator.color(0, 255);
             tessellator.vertex(l, bottom, 0.0D, 0.0D, 1.0D);
             tessellator.vertex(i1, bottom, 0.0D, 1.0D, 1.0D);
             tessellator.vertex(i1, top, 0.0D, 1.0D, 0.0D);
             tessellator.vertex(l, top, 0.0D, 0.0D, 0.0D);
             tessellator.draw();
-            tessellator.start();
-            tessellator.colour(0x808080, 255);
+            tessellator.startQuads();
+            tessellator.color(0x808080, 255);
             tessellator.vertex(l, i5 + k4, 0.0D, 0.0D, 1.0D);
             tessellator.vertex(i1, i5 + k4, 0.0D, 1.0D, 1.0D);
             tessellator.vertex(i1, i5, 0.0D, 1.0D, 0.0D);
             tessellator.vertex(l, i5, 0.0D, 0.0D, 0.0D);
             tessellator.draw();
-            tessellator.start();
-            tessellator.colour(0xc0c0c0, 255);
+            tessellator.startQuads();
+            tessellator.color(0xc0c0c0, 255);
             tessellator.vertex(l, (i5 + k4) - 1, 0.0D, 0.0D, 1.0D);
             tessellator.vertex(i1 - 1, (i5 + k4) - 1, 0.0D, 1.0D, 1.0D);
             tessellator.vertex(i1 - 1, i5, 0.0D, 1.0D, 0.0D);
@@ -355,10 +355,10 @@ public class GuiTabOrder extends ScreenBase {
         GL11.glShadeModel(7424 /*GL_FLAT*/);
         GL11.glEnable(3008 /*GL_ALPHA_TEST*/);
         GL11.glDisable(3042 /*GL_BLEND*/);
-        drawTextWithShadow(textManager, "Recipe Viewer Tab Order", width / 2, 20, 0xffffff);
+        drawTextWithShadow(textRenderer, "Recipe Viewer Tab Order", width / 2, 20, 0xffffff);
 
-        ((Button) buttons.get(buttons.size() - 2)).render(minecraft, mouseX, mouseY);
-        ((Button) buttons.get(buttons.size() - 1)).render(minecraft, mouseX, mouseY);
+        ((ButtonWidget) buttons.get(buttons.size() - 2)).render(minecraft, mouseX, mouseY);
+        ((ButtonWidget) buttons.get(buttons.size() - 1)).render(minecraft, mouseX, mouseY);
 
     }
 
@@ -380,11 +380,11 @@ public class GuiTabOrder extends ScreenBase {
         GL11.glBindTexture(3553 /*GL_TEXTURE_2D*/, minecraft.textureManager.getTextureId("/gui/background.png"));
         GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
         float f = 32F;
-        tessellator.start();
-        tessellator.colour(0x404040, l);
+        tessellator.startQuads();
+        tessellator.color(0x404040, l);
         tessellator.vertex(0.0D, bottom, 0.0D, 0.0D, (float) bottom / f);
         tessellator.vertex(right, bottom, 0.0D, (float) right / f, (float) bottom / f);
-        tessellator.colour(0x404040, k);
+        tessellator.color(0x404040, k);
         tessellator.vertex(right, top, 0.0D, (float) right / f, (float) top / f);
         tessellator.vertex(0.0D, top, 0.0D, 0.0D, (float) top / f);
         tessellator.draw();

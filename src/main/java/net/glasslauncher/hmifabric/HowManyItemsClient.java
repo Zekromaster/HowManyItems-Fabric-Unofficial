@@ -9,19 +9,20 @@ import net.glasslauncher.hmifabric.tabs.TabCrafting;
 import net.glasslauncher.hmifabric.tabs.TabRegistry;
 import net.glasslauncher.hmifabric.tabs.TabSmelting;
 import net.mine_diver.unsafeevents.listener.EventListener;
-import net.minecraft.block.BlockBase;
+import net.minecraft.block.Block;
+import net.minecraft.class_564;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.gui.screen.container.ContainerBase;
-import net.minecraft.client.util.ScreenScaler;
-import net.minecraft.item.ItemInstance;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.container.ContainerScreen;
+import net.minecraft.inventory.Container;
+import net.minecraft.item.ItemStack;
 import net.modificationstation.stationapi.api.client.event.network.MultiplayerLogoutEvent;
 import net.modificationstation.stationapi.api.client.event.option.KeyBindingRegisterEvent;
 import net.modificationstation.stationapi.api.event.registry.MessageListenerRegistryEvent;
 import net.modificationstation.stationapi.api.mod.entrypoint.Entrypoint;
-import net.modificationstation.stationapi.api.registry.Identifier;
-import net.modificationstation.stationapi.api.registry.ModID;
 import net.modificationstation.stationapi.api.registry.Registry;
+import net.modificationstation.stationapi.api.util.Identifier;
+import net.modificationstation.stationapi.api.util.Namespace;
 import org.lwjgl.input.Mouse;
 
 import java.util.*;
@@ -44,19 +45,19 @@ public class HowManyItemsClient {
         event.keyBindings.add(KeyBindings.toggleOverlay);
     }
 
-    public static void addGuiToBlock(Class<? extends ContainerBase> gui, ItemInstance item) {
+    public static void addGuiToBlock(Class<? extends ContainerScreen> gui, ItemStack item) {
         TabUtils.putItemGui(gui, item);
     }
 
-    public static void addWorkBenchGui(Class<? extends ContainerBase> gui) {
+    public static void addWorkBenchGui(Class<? extends ContainerScreen> gui) {
         TabUtils.addWorkBenchGui(gui);
     }
 
-    public static void addEquivalentWorkbench(ItemInstance item) {
+    public static void addEquivalentWorkbench(ItemStack item) {
         TabUtils.addEquivalentWorkbench(item);
     }
 
-    public static void addEquivalentFurnace(ItemInstance item) {
+    public static void addEquivalentFurnace(ItemStack item) {
         TabUtils.addEquivalentFurnace(item);
     }
 
@@ -64,9 +65,9 @@ public class HowManyItemsClient {
         if (thisMod.overlay != null) thisMod.overlay.init();
     }
 
-    public void onTickInGUI(Minecraft mc, ScreenBase guiscreen) {
-        if (guiscreen instanceof ContainerBase) {
-            ContainerBase screen = (ContainerBase) guiscreen;
+    public void onTickInGUI(Minecraft mc, Screen guiscreen) {
+        if (guiscreen instanceof ContainerScreen) {
+            ContainerScreen screen = (ContainerScreen) guiscreen;
             if (Config.config.overlayEnabled) {
                 if (GuiOverlay.screen != screen || overlay == null || screen.width != overlay.width || screen.height != overlay.height) {
                     overlay = new GuiOverlay(screen);
@@ -77,14 +78,14 @@ public class HowManyItemsClient {
             if (Utils.isKeyDown(KeyBindings.pushRecipe) || Utils.isKeyDown(KeyBindings.pushUses)) {
                 if (!keyHeldLastTick) {
                     boolean getUses = Utils.isKeyDown(KeyBindings.pushUses);
-                    ItemInstance newFilter = null;
+                    ItemStack newFilter = null;
 
-                    ScreenScaler scaledresolution = new ScreenScaler(mc.options, mc.actualWidth, mc.actualHeight);
-                    int i = scaledresolution.getScaledWidth();
-                    int j = scaledresolution.getScaledHeight();
-                    int posX = (Mouse.getEventX() * i) / mc.actualWidth;
-                    int posY = j - (Mouse.getEventY() * j) / mc.actualHeight - 1;
-                    newFilter = Utils.hoveredItem((ContainerBase) guiscreen, posX, posY);
+                    class_564 scaledresolution = new class_564(mc.options, mc.displayWidth, mc.displayHeight);
+                    int i = scaledresolution.method_1857();
+                    int j = scaledresolution.method_1858();
+                    int posX = (Mouse.getEventX() * i) / mc.displayWidth;
+                    int posY = j - (Mouse.getEventY() * j) / mc.displayHeight - 1;
+                    newFilter = Utils.hoveredItem((ContainerScreen) guiscreen, posX, posY);
                     if (newFilter == null) {
                         newFilter = GuiOverlay.hoverItem;
                     }
@@ -109,7 +110,7 @@ public class HowManyItemsClient {
                             if (!GuiOverlay.emptySearchBox()) GuiOverlay.focusSearchBox();
                     }
                 }
-            } else if (KeyBindings.clearSearchBox.key == KeyBindings.focusSearchBox.key
+            } else if (KeyBindings.clearSearchBox.code == KeyBindings.focusSearchBox.code
                     && Utils.isKeyDown(KeyBindings.clearSearchBox)) {
 
                 if (System.currentTimeMillis() > focusCooldown) {
@@ -147,34 +148,34 @@ public class HowManyItemsClient {
     public static boolean keyHeldLastTick = false;
     private static long focusCooldown = 0L;
 
-    public static void pushRecipe(ScreenBase gui, ItemInstance item, boolean getUses) {
-        if (Utils.getMC().player.inventory.getCursorItem() == null) {
+    public static void pushRecipe(Screen gui, ItemStack item, boolean getUses) {
+        if (Utils.getMC().player.inventory.getCursorStack() == null) {
             if (gui instanceof GuiRecipeViewer) {
                 ((GuiRecipeViewer) gui).push(item, getUses);
             } else if (!GuiOverlay.searchBoxFocused() && getTabs().size() > 0) {
                 GuiRecipeViewer newgui = new GuiRecipeViewer(item, getUses, gui);
                 Utils.getMC().currentScreen = newgui;
-                ScreenScaler scaledresolution = new ScreenScaler(Utils.getMC().options, Utils.getMC().actualWidth, Utils.getMC().actualHeight);
-                int i = scaledresolution.getScaledWidth();
-                int j = scaledresolution.getScaledHeight();
+                class_564 scaledresolution = new class_564(Utils.getMC().options, Utils.getMC().displayWidth, Utils.getMC().displayHeight);
+                int i = scaledresolution.method_1857();
+                int j = scaledresolution.method_1858();
                 newgui.init(Utils.getMC(), i, j);
-                Utils.getMC().skipGameRender = false;
+                Utils.getMC().field_2821 = false;
             }
         }
     }
 
-    public static void pushTabBlock(ScreenBase gui, ItemInstance item) {
+    public static void pushTabBlock(Screen gui, ItemStack item) {
         if (gui instanceof GuiRecipeViewer) {
             ((GuiRecipeViewer) gui).pushTabBlock(item);
         } else if (!GuiOverlay.searchBoxFocused() && getTabs().size() > 0) {
-            Utils.getMC().lockCursor();
+            Utils.getMC().method_2133();
             GuiRecipeViewer newgui = new GuiRecipeViewer(item, gui);
             Utils.getMC().currentScreen = newgui;
-            ScreenScaler scaledresolution = new ScreenScaler(Utils.getMC().options, Utils.getMC().actualWidth, Utils.getMC().actualHeight);
-            int i = scaledresolution.getScaledWidth();
-            int j = scaledresolution.getScaledHeight();
+            class_564 scaledresolution = new class_564(Utils.getMC().options, Utils.getMC().displayWidth, Utils.getMC().displayHeight);
+            int i = scaledresolution.method_1857();
+            int j = scaledresolution.method_1858();
             newgui.init(Utils.getMC(), i, j);
-            Utils.getMC().skipGameRender = false;
+            Utils.getMC().field_2821 = false;
         }
     }
 
@@ -209,32 +210,32 @@ public class HowManyItemsClient {
 
     @EventListener
     public void registerTabs(HMITabRegistryEvent event) {
-        hiddenItems.add(new ItemInstance(BlockBase.STILL_WATER));
-        hiddenItems.add(new ItemInstance(BlockBase.STILL_LAVA));
-        hiddenItems.add(new ItemInstance(BlockBase.BED));
-        hiddenItems.add(new ItemInstance(BlockBase.TALLGRASS));
-        hiddenItems.add(new ItemInstance(BlockBase.DEADBUSH));
-        hiddenItems.add(new ItemInstance(BlockBase.PISTON_HEAD));
-        hiddenItems.add(new ItemInstance(BlockBase.MOVING_PISTON));
-        hiddenItems.add(new ItemInstance(BlockBase.DOUBLE_STONE_SLAB));
-        hiddenItems.add(new ItemInstance(BlockBase.REDSTONE_DUST));
-        hiddenItems.add(new ItemInstance(BlockBase.CROPS));
-        hiddenItems.add(new ItemInstance(BlockBase.FARMLAND));
-        hiddenItems.add(new ItemInstance(BlockBase.FURNACE_LIT));
-        hiddenItems.add(new ItemInstance(BlockBase.STANDING_SIGN));
-        hiddenItems.add(new ItemInstance(BlockBase.WOOD_DOOR));
-        hiddenItems.add(new ItemInstance(BlockBase.WALL_SIGN));
-        hiddenItems.add(new ItemInstance(BlockBase.IRON_DOOR));
-        hiddenItems.add(new ItemInstance(BlockBase.REDSTONE_ORE_LIT));
-        hiddenItems.add(new ItemInstance(BlockBase.REDSTONE_TORCH));
-        hiddenItems.add(new ItemInstance(BlockBase.SUGAR_CANES));
-        hiddenItems.add(new ItemInstance(BlockBase.CAKE));
-        hiddenItems.add(new ItemInstance(BlockBase.REDSTONE_REPEATER));
-        hiddenItems.add(new ItemInstance(BlockBase.REDSTONE_REPEATER_LIT));
-        hiddenItems.add(new ItemInstance(BlockBase.LOCKED_CHEST));
+        hiddenItems.add(new ItemStack(Block.WATER));
+        hiddenItems.add(new ItemStack(Block.LAVA));
+        hiddenItems.add(new ItemStack(Block.BED));
+        hiddenItems.add(new ItemStack(Block.GRASS));
+        hiddenItems.add(new ItemStack(Block.DEAD_BUSH));
+        hiddenItems.add(new ItemStack(Block.PISTON_HEAD));
+        hiddenItems.add(new ItemStack(Block.MOVING_PISTON));
+        hiddenItems.add(new ItemStack(Block.DOUBLE_SLAB));
+        hiddenItems.add(new ItemStack(Block.REDSTONE_WIRE));
+        hiddenItems.add(new ItemStack(Block.WHEAT));
+        hiddenItems.add(new ItemStack(Block.FARMLAND));
+        hiddenItems.add(new ItemStack(Block.LIT_FURNACE));
+        hiddenItems.add(new ItemStack(Block.SIGN));
+        hiddenItems.add(new ItemStack(Block.DOOR));
+        hiddenItems.add(new ItemStack(Block.WALL_SIGN));
+        hiddenItems.add(new ItemStack(Block.IRON_DOOR));
+        hiddenItems.add(new ItemStack(Block.LIT_REDSTONE_ORE));
+        hiddenItems.add(new ItemStack(Block.REDSTONE_TORCH));
+        hiddenItems.add(new ItemStack(Block.SUGAR_CANE));
+        hiddenItems.add(new ItemStack(Block.CAKE));
+        hiddenItems.add(new ItemStack(Block.REPEATER));
+        hiddenItems.add(new ItemStack(Block.POWERED_REPEATER));
+        hiddenItems.add(new ItemStack(Block.LOCKED_CHEST));
 
-        event.registry.register(Identifier.of(ModID.MINECRAFT, "crafting"), new TabCrafting(HowManyItems.MODID), new ItemInstance(BlockBase.WORKBENCH));
-        event.registry.register(Identifier.of(ModID.MINECRAFT, "smelting"), new TabSmelting(HowManyItems.MODID), new ItemInstance(BlockBase.FURNACE));
-        event.registry.addEquivalentCraftingStation(Identifier.of(ModID.MINECRAFT, "smelting"), new ItemInstance(BlockBase.FURNACE_LIT));
+        event.registry.register(Identifier.of(Namespace.MINECRAFT, "crafting"), new TabCrafting(HowManyItems.MODID), new ItemStack(Block.CRAFTING_TABLE));
+        event.registry.register(Identifier.of(Namespace.MINECRAFT, "smelting"), new TabSmelting(HowManyItems.MODID), new ItemStack(Block.FURNACE));
+        event.registry.addEquivalentCraftingStation(Identifier.of(Namespace.MINECRAFT, "smelting"), new ItemStack(Block.LIT_FURNACE));
     }
 }

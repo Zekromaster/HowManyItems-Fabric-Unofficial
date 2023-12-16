@@ -1,12 +1,12 @@
 package net.glasslauncher.hmifabric;
 
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.gui.widgets.Textbox;
-import net.minecraft.client.render.TextRenderer;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.TextFieldWidget;
 
-public class GuiTextFieldHMI extends Textbox {
+public class GuiTextFieldHMI extends TextFieldWidget {
 
-    public GuiTextFieldHMI(ScreenBase guiscreen, TextRenderer fontrenderer, int i, int j, int k, int l, String s) {
+    public GuiTextFieldHMI(Screen guiscreen, TextRenderer fontrenderer, int i, int j, int k, int l, String s) {
         super(guiscreen, fontrenderer, i, j, k, l, s);
         xPos = i;
         yPos = j;
@@ -22,7 +22,7 @@ public class GuiTextFieldHMI extends Textbox {
     @Override
     public void mouseClicked(int posX, int posY, int eventButton) {
         super.mouseClicked(posX, posY, eventButton);
-        if (this.selected && eventButton == 1) {
+        if (this.focused && eventButton == 1) {
             GuiOverlay.clearSearchBox();
         }
     }

@@ -10,7 +10,7 @@ import net.glasslauncher.mods.api.gcapi.api.GCAPI;
 import net.glasslauncher.mods.api.gcapi.api.GConfig;
 import net.glasslauncher.mods.api.gcapi.api.MultiplayerSynced;
 import net.glasslauncher.mods.api.gcapi.impl.ConfigFactories;
-import net.modificationstation.stationapi.api.registry.Identifier;
+import net.modificationstation.stationapi.api.util.Identifier;
 
 import java.lang.reflect.*;
 import java.util.*;

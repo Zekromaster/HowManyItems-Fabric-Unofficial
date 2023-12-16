@@ -1,15 +1,15 @@
 package net.glasslauncher.hmifabric;
 
 import net.glasslauncher.hmifabric.tabs.Tab;
-import net.minecraft.entity.player.PlayerBase;
-import net.minecraft.inventory.InventoryBase;
-import net.minecraft.item.ItemInstance;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.ItemStack;
 
 import java.util.*;
 
 
-public class InventoryRecipeViewer implements InventoryBase {
-    public InventoryRecipeViewer(ItemInstance itemstack) {
+public class InventoryRecipeViewer implements Inventory {
+    public InventoryRecipeViewer(ItemStack itemstack) {
         newList = true;
         //setFilter(null);
 
@@ -61,33 +61,33 @@ public class InventoryRecipeViewer implements InventoryBase {
     }
 
     @Override
-    public int getInventorySize() {
+    public int size() {
         return currentTab.recipesPerPage * currentTab.slots.length;
     }
 
     @Override
-    public ItemInstance takeInventoryItem(int i, int j) {
+    public ItemStack removeStack(int i, int j) {
         return null;
     }
 
     @Override
-    public void setInventoryItem(int i, ItemInstance itemstack) {
+    public void setStack(int i, ItemStack itemstack) {
     }
 
     @Override
-    public boolean canPlayerUse(PlayerBase entityplayer) {
+    public boolean canPlayerUse(PlayerEntity entityplayer) {
         return true;
     }
 
     @Override
-    public String getContainerName() {
+    public String getName() {
         return String.format("%d / %d", new Object[]{
                 getPage() + 1, Integer.valueOf((currentTab.size - 1) / currentTab.recipesPerPage) + 1
         });
     }
 
     @Override
-    public ItemInstance getInventoryItem(int i) {
+    public ItemStack getStack(int i) {
         if (!filter.isEmpty() && items[i / currentTab.slots.length] != null) {
             return items[i / currentTab.slots.length][i % currentTab.slots.length];
         }
@@ -95,7 +95,7 @@ public class InventoryRecipeViewer implements InventoryBase {
     }
 
     @Override
-    public int getMaxItemCount() {
+    public int getMaxCountPerStack() {
         return 64;
     }
 
@@ -103,7 +103,7 @@ public class InventoryRecipeViewer implements InventoryBase {
     public void markDirty() {
     }
 
-    public Stack<ItemInstance> filter = new Stack<>();
+    public Stack<ItemStack> filter = new Stack<>();
     public Stack<Tab> prevTabs = new Stack<>();
     public Stack<Integer> prevPages = new Stack<>();
     public Stack<Boolean> prevGetUses = new Stack<>();
@@ -112,7 +112,7 @@ public class InventoryRecipeViewer implements InventoryBase {
     public Boolean newList = false;
     //protected ItemInstance filter;
     public int index;
-    public ItemInstance items[][];
+    public ItemStack items[][];
 
 
 }

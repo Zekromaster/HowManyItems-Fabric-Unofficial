@@ -3,27 +3,27 @@ package net.glasslauncher.hmifabric;
 import net.glasslauncher.hmifabric.mixin.access.ContainerBaseAccessor;
 import net.glasslauncher.hmifabric.tabs.Tab;
 import net.glasslauncher.hmifabric.tabs.TabWithTexture;
-import net.minecraft.client.gui.screen.ScreenBase;
-import net.minecraft.client.gui.screen.container.ContainerBase;
-import net.minecraft.client.gui.widgets.Button;
-import net.minecraft.client.gui.widgets.OptionButton;
-import net.minecraft.client.util.ScreenScaler;
-import net.minecraft.item.ItemInstance;
+import net.minecraft.class_564;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.container.ContainerScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.OptionButtonWidget;
+import net.minecraft.item.ItemStack;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.util.*;
 
 
-public class GuiRecipeViewer extends ContainerBase {
-    public GuiRecipeViewer(ItemInstance itemstack, Boolean getUses, ScreenBase parent) {
+public class GuiRecipeViewer extends ContainerScreen {
+    public GuiRecipeViewer(ItemStack itemstack, Boolean getUses, Screen parent) {
         super(container = new ContainerRecipeViewer(inv = new InventoryRecipeViewer(itemstack)));
         this.parent = parent;
         init2();
         push(itemstack, getUses);
     }
 
-    public GuiRecipeViewer(ItemInstance itemstack, ScreenBase parent) {
+    public GuiRecipeViewer(ItemStack itemstack, Screen parent) {
         super(container = new ContainerRecipeViewer(inv = new InventoryRecipeViewer(itemstack)));
         this.parent = parent;
         init2();
@@ -32,19 +32,19 @@ public class GuiRecipeViewer extends ContainerBase {
 
     public void init2() {
         if (Config.config.recipeViewerDraggableGui) {
-            containerWidth = Config.config.recipeViewerGuiWidth;
-            containerHeight = Config.config.recipeViewerGuiHeight;
+            backgroundWidth = Config.config.recipeViewerGuiWidth;
+            backgroundHeight = Config.config.recipeViewerGuiHeight;
         } else {
-            if (parent instanceof ContainerBase) {
+            if (parent instanceof ContainerScreen) {
                 try {
-                    containerWidth = ((ContainerBaseAccessor) parent).getContainerWidth();
+                    backgroundWidth = ((ContainerBaseAccessor) parent).getContainerWidth();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                containerHeight -= 80;
+                backgroundHeight -= 80;
             } else {
-                containerWidth = 254;
-                containerHeight = 136;
+                backgroundWidth = 254;
+                backgroundHeight = 136;
             }
 
         }
@@ -52,7 +52,7 @@ public class GuiRecipeViewer extends ContainerBase {
         newTab(tabs.get(0));
     }
 
-    public void pushTabBlock(ItemInstance itemstack) {
+    public void pushTabBlock(ItemStack itemstack) {
         if (itemstack == null) {
             return;
         }
@@ -64,8 +64,8 @@ public class GuiRecipeViewer extends ContainerBase {
 
         for (Tab tab : HowManyItemsClient.getTabs()) {
             boolean tabMatchesBlock = false;
-            for (ItemInstance tabBlock : tab.equivalentCraftingStations) {
-                if (tabBlock.isDamageAndIDIdentical(itemstack)) {
+            for (ItemStack tabBlock : tab.equivalentCraftingStations) {
+                if (tabBlock.isItemEqual(itemstack)) {
                     tabMatchesBlock = true;
                     tab.updateRecipes(null, false);
                     break;
@@ -78,19 +78,19 @@ public class GuiRecipeViewer extends ContainerBase {
         postPush();
     }
 
-    public void push(ItemInstance itemstack, Boolean getUses) {
+    public void push(ItemStack itemstack, Boolean getUses) {
         if (!inv.filter.isEmpty() && itemstack == null && inv.filter.peek() == null) {
             return;
         }
         if (inv.filter.isEmpty() || getUses != inv.prevGetUses.peek() ||
                 (itemstack == null && inv.filter.peek() != null) || (itemstack != null && inv.filter.peek() == null) ||
-                (itemstack.itemId != inv.filter.peek().itemId || (itemstack.getDamage() != inv.filter.peek().getDamage() && itemstack.usesMeta()))) {
+                (itemstack.itemId != inv.filter.peek().itemId || (itemstack.getDamage() != inv.filter.peek().getDamage() && itemstack.method_719()))) {
 
             inv.newList = true;
             if (itemstack == null) {
                 inv.filter.push(null);
             } else
-                inv.filter.push(new ItemInstance(itemstack.getType(), 1, itemstack.getDamage()));
+                inv.filter.push(new ItemStack(itemstack.getItem(), 1, itemstack.getDamage()));
             inv.prevTabs.push(inv.currentTab);
             inv.prevPages.push(inv.getPage() * inv.currentTab.recipesPerPage);
             inv.prevGetUses.push(getUses);
@@ -188,11 +188,11 @@ public class GuiRecipeViewer extends ContainerBase {
             dragging = false;
         }
         if (dragging) {
-            int x = (width - containerWidth) / 2;
-            int y = (height - containerHeight) / 2;
-            if (containerWidth != i - x || containerHeight != j - y) {
-                if (i - x > tabs.get(tabIndex).WIDTH + 2 * EDGE_SIZE) containerWidth = i - x;
-                if (j - y > tabs.get(tabIndex).HEIGHT + 2 * EDGE_SIZE) containerHeight = j - y;
+            int x = (width - backgroundWidth) / 2;
+            int y = (height - backgroundHeight) / 2;
+            if (backgroundWidth != i - x || backgroundHeight != j - y) {
+                if (i - x > tabs.get(tabIndex).WIDTH + 2 * EDGE_SIZE) backgroundWidth = i - x;
+                if (j - y > tabs.get(tabIndex).HEIGHT + 2 * EDGE_SIZE) backgroundHeight = j - y;
                 tabs.get(tabIndex).redrawSlots = true;
             }
         }
@@ -203,20 +203,20 @@ public class GuiRecipeViewer extends ContainerBase {
     @Override
     protected void mouseClicked(int posX, int posY, int k) {
         super.mouseClicked(posX, posY, k);
-        int x = (width - containerWidth) / 2;
-        int y = (height - containerHeight) / 2;
-        ItemInstance item = Utils.hoveredItem(this, posX, posY);
-        if (item != null && minecraft.player.inventory.getCursorItem() == null) {
+        int x = (width - backgroundWidth) / 2;
+        int y = (height - backgroundHeight) / 2;
+        ItemStack item = Utils.hoveredItem(this, posX, posY);
+        if (item != null && minecraft.player.inventory.getCursorStack() == null) {
             push(item, k == 1);
         } else {
             //Start dragging to change gui size
-            if (Config.config.recipeViewerDraggableGui && (posX - containerWidth + 10 > x) && (posX - containerWidth - 4 < x)
-                    && (posY - containerHeight + 10 > y) && (posY - containerHeight - 4 < y) && k == 0 && !dragging) {
+            if (Config.config.recipeViewerDraggableGui && (posX - backgroundWidth + 10 > x) && (posX - backgroundWidth - 4 < x)
+                    && (posY - backgroundHeight + 10 > y) && (posY - backgroundHeight - 4 < y) && k == 0 && !dragging) {
                 dragging = true;
             }
             //Change page with LMB or RMB
-            else if ((posX > x) && (posX < x + containerWidth)
-                    && (posY > y + 4) && (posY < y + containerHeight + 4)) {
+            else if ((posX > x) && (posX < x + backgroundWidth)
+                    && (posY > y + 4) && (posY < y + backgroundHeight + 4)) {
                 if (k == 0) {
                     inv.incIndex();
                     initButtons();
@@ -228,7 +228,7 @@ public class GuiRecipeViewer extends ContainerBase {
             } else {
                 //Change tab
                 int tabCount = 0;
-                for (int z = tabPage; z < tabs.size() && (tabCount + 1) * TAB_WIDTH < containerWidth; z++) {
+                for (int z = tabPage; z < tabs.size() && (tabCount + 1) * TAB_WIDTH < backgroundWidth; z++) {
                     if (tabs.get(z).size > 0) {
                         if ((posX - tabCount * TAB_WIDTH + 1 > x) && (posX - (tabCount + 1) * TAB_WIDTH < x)
                                 && (posY + 21 > y) && (posY - 3 < y)
@@ -261,9 +261,9 @@ public class GuiRecipeViewer extends ContainerBase {
             inv.decIndex();
             initButtons();
         }
-        if (i == Keyboard.KEY_ESCAPE || i == minecraft.options.inventoryKey.key) {
+        if (i == Keyboard.KEY_ESCAPE || i == minecraft.options.inventoryKey.code) {
             displayParent();
-            if (i == minecraft.options.inventoryKey.key) minecraft.player.closeContainer();
+            if (i == minecraft.options.inventoryKey.code) minecraft.player.closeScreen();
         } else
             super.keyPressed(c, i);
     }
@@ -277,30 +277,30 @@ public class GuiRecipeViewer extends ContainerBase {
 
     public void initButtons() {
         buttons.clear();
-        int x = (width - containerWidth) / 2;
-        int y = (height - containerHeight) / 2;
+        int x = (width - backgroundWidth) / 2;
+        int y = (height - backgroundHeight) / 2;
 
-        buttons.add(new OptionButton(-1, x + containerWidth - 20, y - 43, 20, 20, ">"));
-        buttons.add(new OptionButton(-2, x, y - 43, 20, 20, "<"));
-        ((Button) buttons.get(0)).visible = tabPageButtons;
-        ((Button) buttons.get(0)).active = tabPageButton1;
+        buttons.add(new OptionButtonWidget(-1, x + backgroundWidth - 20, y - 43, 20, 20, ">"));
+        buttons.add(new OptionButtonWidget(-2, x, y - 43, 20, 20, "<"));
+        ((ButtonWidget) buttons.get(0)).visible = tabPageButtons;
+        ((ButtonWidget) buttons.get(0)).active = tabPageButton1;
 
-        ((Button) buttons.get(1)).visible = tabPageButtons;
-        ((Button) buttons.get(1)).active = tabPageButton2;
+        ((ButtonWidget) buttons.get(1)).visible = tabPageButtons;
+        ((ButtonWidget) buttons.get(1)).active = tabPageButton2;
 
         for (int k = 0; k < buttons.size(); k++) {
-            Button guibutton = (Button) buttons.get(k);
+            ButtonWidget guibutton = (ButtonWidget) buttons.get(k);
             guibutton.render(minecraft, cursorPosX, cursorPosY);
         }
 
         if (tabs.get(tabIndex) instanceof TabWithTexture) {
             TabWithTexture tab = (TabWithTexture) tabs.get(tabIndex);
-            int gapX = (containerWidth - 2 * EDGE_SIZE) % (tab.WIDTH + tab.MIN_PADDING_X);
-            int noX = (containerWidth - 2 * EDGE_SIZE) / (tab.WIDTH + tab.MIN_PADDING_X);
+            int gapX = (backgroundWidth - 2 * EDGE_SIZE) % (tab.WIDTH + tab.MIN_PADDING_X);
+            int noX = (backgroundWidth - 2 * EDGE_SIZE) / (tab.WIDTH + tab.MIN_PADDING_X);
             if (noX == 0) noX++;
 
-            int gapY = (containerHeight - 2 * EDGE_SIZE) % (tab.HEIGHT + tab.MIN_PADDING_Y);
-            int noY = (containerHeight - 2 * EDGE_SIZE) / (tab.HEIGHT + tab.MIN_PADDING_Y);
+            int gapY = (backgroundHeight - 2 * EDGE_SIZE) % (tab.HEIGHT + tab.MIN_PADDING_Y);
+            int noY = (backgroundHeight - 2 * EDGE_SIZE) / (tab.HEIGHT + tab.MIN_PADDING_Y);
             if (noY == 0) noY++;
 
             if (tab.size == 1) {
@@ -312,10 +312,10 @@ public class GuiRecipeViewer extends ContainerBase {
             for (int l1 = 0; l1 < noX; l1++) {
                 for (int i2 = 0; i2 < noY; i2++) {
                     if (tab.size > 0 && inv.items != null && i++ < tab.recipesOnThisPage && inv.items.length > i - 1 && tab.drawSetupRecipeButton(parent, inv.items[i - 1])) {
-                        int posX = EDGE_SIZE + gapX / 4 + l1 * (containerWidth - gapX / 2) / noX;
-                        int posY = EDGE_SIZE + gapY / 4 + i2 * (containerHeight - gapY / 2) / noY;
-                        if (noX == 1) posX = (containerWidth - tab.WIDTH) / 2;
-                        if (noY == 1) posY = (containerHeight - tab.HEIGHT) / 2;
+                        int posX = EDGE_SIZE + gapX / 4 + l1 * (backgroundWidth - gapX / 2) / noX;
+                        int posY = EDGE_SIZE + gapY / 4 + i2 * (backgroundHeight - gapY / 2) / noY;
+                        if (noX == 1) posX = (backgroundWidth - tab.WIDTH) / 2;
+                        if (noY == 1) posY = (backgroundHeight - tab.HEIGHT) / 2;
                         GuiButtonHMI button = new GuiButtonHMI(i, x + posX + tab.BUTTON_POS_X, y + posY + tab.BUTTON_POS_Y, BUTTON_WIDTH, BUTTON_HEIGHT, "+");
                         Boolean[] itemsInInv = tab.itemsInInventory(parent, inv.items[i - 1]);
                         for (int qq = 0; qq < itemsInInv.length; qq++) {
@@ -335,13 +335,13 @@ public class GuiRecipeViewer extends ContainerBase {
     private final int BUTTON_HEIGHT = 12;
 
     @Override
-    protected void buttonClicked(Button guibutton) {
+    protected void buttonClicked(ButtonWidget guibutton) {
         super.buttonClicked(guibutton);
         if (guibutton.id == -1) {
-            tabPage += containerWidth / TAB_WIDTH;
-            if (tabPage >= tabs.size()) tabPage -= containerWidth / TAB_WIDTH;
+            tabPage += backgroundWidth / TAB_WIDTH;
+            if (tabPage >= tabs.size()) tabPage -= backgroundWidth / TAB_WIDTH;
         } else if (guibutton.id == -2) {
-            tabPage -= containerWidth / TAB_WIDTH;
+            tabPage -= backgroundWidth / TAB_WIDTH;
             if (tabPage < 0) tabPage = 0;
         } else {
             if (guibutton.id - 1 < inv.items.length && tabs.get(tabIndex) instanceof TabWithTexture) {
@@ -357,16 +357,16 @@ public class GuiRecipeViewer extends ContainerBase {
         minecraft = Utils.getMC();
         minecraft.player.container = minecraft.player.playerContainer;
         //}
-        this.onClose();
+        this.removed();
         if (parent != null) {
             minecraft.currentScreen = parent;
-            ScreenScaler scaledresolution = new ScreenScaler(minecraft.options, minecraft.actualWidth, minecraft.actualHeight);
-            int i = scaledresolution.getScaledWidth();
-            int j = scaledresolution.getScaledHeight();
+            class_564 scaledresolution = new class_564(minecraft.options, minecraft.displayWidth, minecraft.displayHeight);
+            int i = scaledresolution.method_1857();
+            int j = scaledresolution.method_1858();
             minecraft.method_2134();
             parent.init(minecraft, i, j);
         } else {
-            minecraft.openScreen(parent);
+            minecraft.setScreen(parent);
         }
     }
 
@@ -382,16 +382,16 @@ public class GuiRecipeViewer extends ContainerBase {
     }
 
     @Override
-    protected void renderForeground() {
+    protected void drawForeground() {
         if ((double) inv.currentTab.size / inv.currentTab.recipesPerPage > 1) {
-            String s = inv.getContainerName();
-            textManager.drawTextWithShadow(s, containerWidth - 4 - textManager.getTextWidth(s), 10, 0x404040);
+            String s = inv.getName();
+            textRenderer.drawWithShadow(s, backgroundWidth - 4 - textRenderer.getWidth(s), 10, 0x404040);
         }
         int tabCount = 0;
-        int x = (width - containerWidth) / 2;
-        int y = (height - containerHeight) / 2;
+        int x = (width - backgroundWidth) / 2;
+        int y = (height - backgroundHeight) / 2;
         for (int z = tabPage; z < tabs.size(); z++) {
-            if (tabs.get(z).size > 0 && (tabCount + 1) * TAB_WIDTH < containerWidth) {
+            if (tabs.get(z).size > 0 && (tabCount + 1) * TAB_WIDTH < backgroundWidth) {
                 if ((cursorPosX > x + tabCount * TAB_WIDTH + 6) && (cursorPosX < x + (tabCount + 1) * TAB_WIDTH - 6)
                         && (cursorPosY > y - 16) && (cursorPosY < y)) {
 
@@ -407,12 +407,12 @@ public class GuiRecipeViewer extends ContainerBase {
         if (tabs.get(tabIndex) instanceof TabWithTexture) {
             TabWithTexture tab = (TabWithTexture) tabs.get(tabIndex);
             y += 3;
-            int gapX = (containerWidth - 2 * EDGE_SIZE) % (tab.WIDTH + tab.MIN_PADDING_X);
-            int noX = (containerWidth - 2 * EDGE_SIZE) / (tab.WIDTH + tab.MIN_PADDING_X);
+            int gapX = (backgroundWidth - 2 * EDGE_SIZE) % (tab.WIDTH + tab.MIN_PADDING_X);
+            int noX = (backgroundWidth - 2 * EDGE_SIZE) / (tab.WIDTH + tab.MIN_PADDING_X);
             if (noX == 0) noX++;
 
-            int gapY = (containerHeight - 2 * EDGE_SIZE) % (tab.HEIGHT + tab.MIN_PADDING_Y);
-            int noY = (containerHeight - 2 * EDGE_SIZE) / (tab.HEIGHT + tab.MIN_PADDING_Y);
+            int gapY = (backgroundHeight - 2 * EDGE_SIZE) % (tab.HEIGHT + tab.MIN_PADDING_Y);
+            int noY = (backgroundHeight - 2 * EDGE_SIZE) / (tab.HEIGHT + tab.MIN_PADDING_Y);
             if (noY == 0) noY++;
 
             if (tab.size == 1) {
@@ -424,10 +424,10 @@ public class GuiRecipeViewer extends ContainerBase {
             for (int l1 = 0; l1 < noX; l1++) {
                 for (int i2 = 0; i2 < noY; i2++) {
                     if (tab.size > 0 && i++ < tab.recipesOnThisPage) {
-                        int posX = EDGE_SIZE + gapX / 4 + l1 * (containerWidth - gapX / 2) / noX;
-                        int posY = EDGE_SIZE + gapY / 4 + i2 * (containerHeight - gapY / 2) / noY;
-                        if (noX == 1) posX = (containerWidth - tab.WIDTH) / 2;
-                        if (noY == 1) posY = (containerHeight - tab.HEIGHT) / 2;
+                        int posX = EDGE_SIZE + gapX / 4 + l1 * (backgroundWidth - gapX / 2) / noX;
+                        int posY = EDGE_SIZE + gapY / 4 + i2 * (backgroundHeight - gapY / 2) / noY;
+                        if (noX == 1) posX = (backgroundWidth - tab.WIDTH) / 2;
+                        if (noY == 1) posY = (backgroundHeight - tab.HEIGHT) / 2;
                         if (tab.drawSetupRecipeButton(parent, inv.items[i - 1]))
                             if ((cursorPosX > x + posX + tab.BUTTON_POS_X - 1) && (cursorPosX < x + posX + tab.BUTTON_POS_X + BUTTON_WIDTH)
                                     && (cursorPosY > y + posY + tab.BUTTON_POS_Y - 3 - 1) && (cursorPosY < y + posY + tab.BUTTON_POS_Y - 3 + BUTTON_HEIGHT)) {
@@ -437,7 +437,7 @@ public class GuiRecipeViewer extends ContainerBase {
 
                                 for (int qq = 0; qq < itemsInInv.length; qq++) {
                                     if (!itemsInInv[qq]) {
-                                        blit(
+                                        drawTexture(
                                                 posX + tab.slots[qq + 1][0], posY + tab.slots[qq + 1][1],
                                                 posX + tab.slots[qq + 1][0] + 16, posY + tab.slots[qq + 1][1] + 16,
                                                 0x80EC1C12, 0x80EC1C12);
@@ -453,10 +453,10 @@ public class GuiRecipeViewer extends ContainerBase {
         Utils.disableLighting();
     }
 
-    public ItemInstance getHoverItem() {
+    public ItemStack getHoverItem() {
         int tabCount = 0;
-        int x = (width - containerWidth) / 2;
-        int y = (height - containerHeight) / 2;
+        int x = (width - backgroundWidth) / 2;
+        int y = (height - backgroundHeight) / 2;
         for (int z = tabPage; z < tabs.size(); z++) {
             if (tabs.get(z).size > 0) {
                 if ((cursorPosX > x + tabCount * TAB_WIDTH + 6) && (cursorPosX < x + (tabCount + 1) * TAB_WIDTH - 6)
@@ -476,20 +476,20 @@ public class GuiRecipeViewer extends ContainerBase {
     private boolean tabPageButton2;
 
     @Override
-    protected void renderContainerBackground(float f) {
+    protected void drawBackground(float f) {
         Utils.preRender();
-        int x = (width - containerWidth) / 2;
-        int y = (height - containerHeight) / 2 + 3;
+        int x = (width - backgroundWidth) / 2;
+        int y = (height - backgroundHeight) / 2 + 3;
 
 
         //DRAW TABS
         int tabCount = 0;
         for (int z = tabPage; z < tabs.size(); z++) {
             if (tabs.get(z).size > 0) {
-                if (z != tabIndex && (tabCount + 1) * TAB_WIDTH < containerWidth) {
+                if (z != tabIndex && (tabCount + 1) * TAB_WIDTH < backgroundWidth) {
                     Utils.bindTexture();
                     Utils.disableLighting();
-                    blit(x + tabCount * TAB_WIDTH, y - 25, 28, 113, 28, 28);
+                    drawTexture(x + tabCount * TAB_WIDTH, y - 25, 28, 113, 28, 28);
                     Utils.drawItemStack(x + 6 + tabCount * TAB_WIDTH, y - 18, tabs.get(z).getTabItem(), true);
                 }
                 tabCount++;
@@ -498,23 +498,23 @@ public class GuiRecipeViewer extends ContainerBase {
         //DRAW BACKGROUND
         Utils.bindTexture();
         Utils.disableLighting();
-        for (int l1 = 0; l1 < containerWidth - EDGE_SIZE; l1 += 48) {
-            for (int i2 = 0; i2 < containerHeight - EDGE_SIZE; i2 += 48) {
-                blit(x + EDGE_SIZE + l1, y + EDGE_SIZE + i2, 4, 145, containerWidth - l1 - EDGE_SIZE * 2, containerHeight - i2 - EDGE_SIZE * 2); //grey background
+        for (int l1 = 0; l1 < backgroundWidth - EDGE_SIZE; l1 += 48) {
+            for (int i2 = 0; i2 < backgroundHeight - EDGE_SIZE; i2 += 48) {
+                drawTexture(x + EDGE_SIZE + l1, y + EDGE_SIZE + i2, 4, 145, backgroundWidth - l1 - EDGE_SIZE * 2, backgroundHeight - i2 - EDGE_SIZE * 2); //grey background
             }
         }
         //SETUP TAB PAGE BUTTONS
         if (buttons.size() >= 2) {
-            if ((tabCount + tabPage) * TAB_WIDTH < containerWidth) {
+            if ((tabCount + tabPage) * TAB_WIDTH < backgroundWidth) {
                 tabPage = 0;
                 tabPageButtons = false;
             } else {
                 tabPageButtons = true;
             }
-            ((Button) buttons.get(0)).visible = tabPageButtons;
-            ((Button) buttons.get(1)).visible = tabPageButtons;
+            ((ButtonWidget) buttons.get(0)).visible = tabPageButtons;
+            ((ButtonWidget) buttons.get(1)).visible = tabPageButtons;
 
-            if (containerWidth / TAB_WIDTH >= tabCount) {
+            if (backgroundWidth / TAB_WIDTH >= tabCount) {
                 tabPageButton1 = false;
             } else {
                 tabPageButton1 = true;
@@ -524,36 +524,36 @@ public class GuiRecipeViewer extends ContainerBase {
             } else {
                 tabPageButton2 = true;
             }
-            ((Button) buttons.get(0)).active = tabPageButton1;
-            ((Button) buttons.get(1)).active = tabPageButton2;
+            ((ButtonWidget) buttons.get(0)).active = tabPageButton1;
+            ((ButtonWidget) buttons.get(1)).active = tabPageButton2;
         }
 
         //DRAW EDGES
-        for (int l1 = 0; l1 < containerWidth - EDGE_SIZE; l1 += 48) {
-            blit(x + EDGE_SIZE + l1, y, 4, 141, containerWidth - l1 - EDGE_SIZE * 2, EDGE_SIZE); //top border
-            blit(x + EDGE_SIZE + l1, (y + containerHeight) - EDGE_SIZE, 4, 193, containerWidth - l1 - EDGE_SIZE * 2, EDGE_SIZE); //bottom border
+        for (int l1 = 0; l1 < backgroundWidth - EDGE_SIZE; l1 += 48) {
+            drawTexture(x + EDGE_SIZE + l1, y, 4, 141, backgroundWidth - l1 - EDGE_SIZE * 2, EDGE_SIZE); //top border
+            drawTexture(x + EDGE_SIZE + l1, (y + backgroundHeight) - EDGE_SIZE, 4, 193, backgroundWidth - l1 - EDGE_SIZE * 2, EDGE_SIZE); //bottom border
         }
 
-        for (int i2 = 0; i2 < containerHeight - EDGE_SIZE; i2 += 48) {
-            blit(x, y + EDGE_SIZE + i2, 0, 145, EDGE_SIZE, containerHeight - i2 - EDGE_SIZE * 2); //left border
-            blit((x + containerWidth) - EDGE_SIZE, y + EDGE_SIZE + i2, 52, 145, EDGE_SIZE, containerHeight - i2 - EDGE_SIZE * 2); //right border
+        for (int i2 = 0; i2 < backgroundHeight - EDGE_SIZE; i2 += 48) {
+            drawTexture(x, y + EDGE_SIZE + i2, 0, 145, EDGE_SIZE, backgroundHeight - i2 - EDGE_SIZE * 2); //left border
+            drawTexture((x + backgroundWidth) - EDGE_SIZE, y + EDGE_SIZE + i2, 52, 145, EDGE_SIZE, backgroundHeight - i2 - EDGE_SIZE * 2); //right border
         }
 
-        blit(x, y, 0, 141, EDGE_SIZE, EDGE_SIZE); //top left corner
-        blit(x + containerWidth - EDGE_SIZE, y, 52, 141, EDGE_SIZE, EDGE_SIZE); //top right corner
-        blit(x, y + containerHeight - EDGE_SIZE, 0, 193, EDGE_SIZE, EDGE_SIZE); //bottom left corner
-        blit(x + containerWidth - EDGE_SIZE, y + containerHeight - EDGE_SIZE, 52, 193, EDGE_SIZE, EDGE_SIZE); //bottom right corner
+        drawTexture(x, y, 0, 141, EDGE_SIZE, EDGE_SIZE); //top left corner
+        drawTexture(x + backgroundWidth - EDGE_SIZE, y, 52, 141, EDGE_SIZE, EDGE_SIZE); //top right corner
+        drawTexture(x, y + backgroundHeight - EDGE_SIZE, 0, 193, EDGE_SIZE, EDGE_SIZE); //bottom left corner
+        drawTexture(x + backgroundWidth - EDGE_SIZE, y + backgroundHeight - EDGE_SIZE, 52, 193, EDGE_SIZE, EDGE_SIZE); //bottom right corner
 
         //DRAW CURRENT TAB
         tabCount = 0;
         for (int z = tabPage; z < tabs.size(); z++) {
             if (tabs.get(z).size > 0) {
-                if (z == tabIndex && (tabCount + 1) * TAB_WIDTH < containerWidth) {
+                if (z == tabIndex && (tabCount + 1) * TAB_WIDTH < backgroundWidth) {
                     Utils.bindTexture();
                     Utils.disableLighting();
-                    blit(x + tabCount * TAB_WIDTH, y - 25, 0, 113, 28, 28);
+                    drawTexture(x + tabCount * TAB_WIDTH, y - 25, 0, 113, 28, 28);
                     if (tabCount == 0) {
-                        blit(x, y, 0, 145, EDGE_SIZE, 5);
+                        drawTexture(x, y, 0, 145, EDGE_SIZE, 5);
                     }
                     Utils.drawItemStack(x + 6 + tabCount * TAB_WIDTH, y - 18, tabs.get(z).getTabItem(), true);
                 }
@@ -565,7 +565,7 @@ public class GuiRecipeViewer extends ContainerBase {
         Utils.disableLighting();
         //DRAW dragging indicator thing
         if (Config.config.recipeViewerDraggableGui) {
-            blit(x + containerWidth - 29, y + containerHeight - 29, 56, 169, 28, 28);
+            drawTexture(x + backgroundWidth - 29, y + backgroundHeight - 29, 56, 169, 28, 28);
         }
 
         //DRAW RECIPE CONTAINER
@@ -573,16 +573,16 @@ public class GuiRecipeViewer extends ContainerBase {
         Tab tab = tabs.get(tabIndex);
 
 
-        int gapX = (containerWidth - 2 * EDGE_SIZE) % (tab.WIDTH + tab.MIN_PADDING_X);
-        int noX = (containerWidth - 2 * EDGE_SIZE) / (tab.WIDTH + tab.MIN_PADDING_X);
+        int gapX = (backgroundWidth - 2 * EDGE_SIZE) % (tab.WIDTH + tab.MIN_PADDING_X);
+        int noX = (backgroundWidth - 2 * EDGE_SIZE) / (tab.WIDTH + tab.MIN_PADDING_X);
         if (noX == 0) noX++;
 
-        int gapY = (containerHeight - 2 * EDGE_SIZE) % (tab.HEIGHT + tab.MIN_PADDING_Y);
-        int noY = (containerHeight - 2 * EDGE_SIZE) / (tab.HEIGHT + tab.MIN_PADDING_Y);
+        int gapY = (backgroundHeight - 2 * EDGE_SIZE) % (tab.HEIGHT + tab.MIN_PADDING_Y);
+        int noY = (backgroundHeight - 2 * EDGE_SIZE) / (tab.HEIGHT + tab.MIN_PADDING_Y);
         if (noY == 0) noY++;
 
-        if (containerWidth < tab.WIDTH + 2 * EDGE_SIZE) containerWidth = tab.WIDTH + 2 * EDGE_SIZE;
-        if (containerHeight < tab.HEIGHT + 2 * EDGE_SIZE) containerHeight = tab.HEIGHT + 2 * EDGE_SIZE;
+        if (backgroundWidth < tab.WIDTH + 2 * EDGE_SIZE) backgroundWidth = tab.WIDTH + 2 * EDGE_SIZE;
+        if (backgroundHeight < tab.HEIGHT + 2 * EDGE_SIZE) backgroundHeight = tab.HEIGHT + 2 * EDGE_SIZE;
 
         if (!tab.redrawSlots && tab.slots.length > 0 && container.slots.size() / tab.slots.length > tab.recipesOnThisPage) {
             //tab.recipesOnThisPage = container.slots.size() / tab.slots.length;
@@ -607,10 +607,10 @@ public class GuiRecipeViewer extends ContainerBase {
         for (int l1 = 0; l1 < noX; l1++) {
             for (int i2 = 0; i2 < noY; i2++) {
                 if (tab.size > 0 && i++ < tab.recipesOnThisPage) {
-                    int posX = EDGE_SIZE + gapX / 4 + l1 * (containerWidth - gapX / 2) / noX;
-                    int posY = EDGE_SIZE + gapY / 4 + i2 * (containerHeight - gapY / 2) / noY;
-                    if (noX == 1) posX = (containerWidth - tab.WIDTH) / 2;
-                    if (noY == 1) posY = (containerHeight - tab.HEIGHT) / 2;
+                    int posX = EDGE_SIZE + gapX / 4 + l1 * (backgroundWidth - gapX / 2) / noX;
+                    int posY = EDGE_SIZE + gapY / 4 + i2 * (backgroundHeight - gapY / 2) / noY;
+                    if (noX == 1) posX = (backgroundWidth - tab.WIDTH) / 2;
+                    if (noY == 1) posY = (backgroundHeight - tab.HEIGHT) / 2;
                     tab.draw(x + posX, y + posY, i - 1, cursorPosX, cursorPosY);
                     if (tab.redrawSlots) {
                         for (int q = 0; q < tab.slots.length; q++) {
@@ -633,15 +633,15 @@ public class GuiRecipeViewer extends ContainerBase {
     }
 
     @Override
-    public void onClose() {
-        if (Config.config.recipeViewerGuiWidth != containerWidth || Config.config.recipeViewerGuiHeight != containerHeight) {
-            Config.config.recipeViewerGuiWidth = containerWidth;
-            Config.config.recipeViewerGuiHeight = containerHeight;
+    public void removed() {
+        if (Config.config.recipeViewerGuiWidth != backgroundWidth || Config.config.recipeViewerGuiHeight != backgroundHeight) {
+            Config.config.recipeViewerGuiWidth = backgroundWidth;
+            Config.config.recipeViewerGuiHeight = backgroundHeight;
         }
     }
 
 
-    private ScreenBase parent;
+    private Screen parent;
     private int tabIndex;
     public static List<Tab> tabs;
     private static InventoryRecipeViewer inv;

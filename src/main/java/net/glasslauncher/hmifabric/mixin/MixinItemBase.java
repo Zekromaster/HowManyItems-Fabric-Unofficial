@@ -1,23 +1,23 @@
 package net.glasslauncher.hmifabric.mixin;
 
 import net.glasslauncher.hmifabric.Config;
-import net.minecraft.item.ItemBase;
-import net.minecraft.item.ItemInstance;
-import net.modificationstation.stationapi.api.client.gui.CustomTooltipProvider;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.modificationstation.stationapi.api.client.item.CustomTooltipProvider;
 import net.modificationstation.stationapi.api.tag.TagKey;
 import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.*;
 
-@Mixin(ItemBase.class)
+@Mixin(Item.class)
 public class MixinItemBase implements CustomTooltipProvider {
 
     @Override
-    public String[] getTooltip(ItemInstance itemInstance, String originalTooltip) {
+    public String[] getTooltip(ItemStack itemStack, String originalTooltip) {
         ArrayList<String> tooltip = new ArrayList<>();
         tooltip.add(originalTooltip);
         if (Config.config.devMode) {
-            for (TagKey<?> key : itemInstance.getRegistryEntry().streamTags().toList())
+            for (TagKey<?> key : itemStack.getRegistryEntry().streamTags().toList())
                 tooltip.add(key.id().toString());
         }
         return tooltip.toArray(new String[]{});

@@ -1,18 +1,18 @@
 package net.glasslauncher.hmifabric.tabs;
 
 import net.glasslauncher.hmifabric.Utils;
-import net.minecraft.block.BlockBase;
-import net.minecraft.client.gui.screen.container.ContainerBase;
-import net.minecraft.item.ItemInstance;
-import net.modificationstation.stationapi.api.registry.ModID;
+import net.minecraft.block.Block;
+import net.minecraft.client.gui.screen.container.ContainerScreen;
+import net.minecraft.item.ItemStack;
+import net.modificationstation.stationapi.api.util.Namespace;
 
 import java.util.*;
 
 public class TabGenericBlock extends Tab {
 
     protected Map recipesComplete;
-    protected ArrayList<ItemInstance[]> recipes = new ArrayList<>();
-    protected BlockBase tabBlock;
+    protected ArrayList<ItemStack[]> recipes = new ArrayList<>();
+    protected Block tabBlock;
     protected int metadata;
     protected int inputSlots;
     protected int outputSlots;
@@ -20,29 +20,29 @@ public class TabGenericBlock extends Tab {
     protected int slotOffsetY = -4;
     private String name;
 
-    public TabGenericBlock(ModID tabCreator, Map recipes, BlockBase tabBlock) {
+    public TabGenericBlock(Namespace tabCreator, Map recipes, Block tabBlock) {
         this(tabCreator, recipes, 1, 1, tabBlock, 0);
     }
 
-    public TabGenericBlock(ModID tabCreator, Map recipes, BlockBase tabBlock, String name) {
+    public TabGenericBlock(Namespace tabCreator, Map recipes, Block tabBlock, String name) {
         this(tabCreator, recipes, 1, 1, tabBlock, 0);
         this.name = name;
     }
 
-    public TabGenericBlock(ModID tabCreator, Map recipes, BlockBase tabBlock, int metadata) {
+    public TabGenericBlock(Namespace tabCreator, Map recipes, Block tabBlock, int metadata) {
         this(tabCreator, recipes, 1, 1, tabBlock, metadata);
     }
 
-    public TabGenericBlock(ModID tabCreator, Map recipes, int inputSlots, int outputSlots, BlockBase tabBlock, String name) {
+    public TabGenericBlock(Namespace tabCreator, Map recipes, int inputSlots, int outputSlots, Block tabBlock, String name) {
         this(tabCreator, recipes, inputSlots, outputSlots, tabBlock, 0);
         this.name = name;
     }
 
-    public TabGenericBlock(ModID tabCreator, Map recipes, int inputSlots, int outputSlots, BlockBase tabBlock, int metadata) {
+    public TabGenericBlock(Namespace tabCreator, Map recipes, int inputSlots, int outputSlots, Block tabBlock, int metadata) {
         this(tabCreator, inputSlots, outputSlots, recipes, 140, Math.max(42, Math.max(inputSlots * 18 + 4, outputSlots * 18 + 4)), 3, 3, tabBlock, metadata);
     }
 
-    public TabGenericBlock(ModID tabCreator, int inputSlots, int outputSlots, Map recipes, int width, int height, int minPaddingX, int minPaddingY, BlockBase tabBlock, int metadata) {
+    public TabGenericBlock(Namespace tabCreator, int inputSlots, int outputSlots, Map recipes, int width, int height, int minPaddingX, int minPaddingY, Block tabBlock, int metadata) {
         super(tabCreator, inputSlots + outputSlots, width, height, minPaddingX, minPaddingY);
         this.tabBlock = tabBlock;
         this.metadata = metadata;
@@ -62,24 +62,24 @@ public class TabGenericBlock extends Tab {
     }
 
     @Override
-    public ItemInstance[][] getItems(int index, ItemInstance filter) {
-        ItemInstance[][] items = new ItemInstance[recipesPerPage][];
+    public ItemStack[][] getItems(int index, ItemStack filter) {
+        ItemStack[][] items = new ItemStack[recipesPerPage][];
         for (int j = 0; j < recipesPerPage; j++) {
-            items[j] = new ItemInstance[slots.length];
+            items[j] = new ItemStack[slots.length];
             int k = index + j;
             if (k < recipes.size()) {
-                ItemInstance[] recipe = (ItemInstance[]) recipes.get(k);
+                ItemStack[] recipe = (ItemStack[]) recipes.get(k);
                 for (int i = 0; i < recipe.length; i++) {
                     items[j][i] = recipe[i];
                     if (recipe[i] != null && recipe[i].getDamage() == -1) {
-                        if (recipe[i].usesMeta()) {
+                        if (recipe[i].method_719()) {
                             if (filter != null && recipe[i].itemId == filter.itemId) {
-                                items[j][i] = new ItemInstance(recipe[i].getType(), 0, filter.getDamage());
+                                items[j][i] = new ItemStack(recipe[i].getItem(), 0, filter.getDamage());
                             } else {
-                                items[j][i] = new ItemInstance(recipe[i].getType());
+                                items[j][i] = new ItemStack(recipe[i].getItem());
                             }
                         } else if (filter != null && recipe[i].itemId == filter.itemId) {
-                            items[j][i] = new ItemInstance(recipe[i].getType(), 0, filter.getDamage());
+                            items[j][i] = new ItemStack(recipe[i].getItem(), 0, filter.getDamage());
                         }
                     }
                 }
@@ -99,42 +99,42 @@ public class TabGenericBlock extends Tab {
     }
 
     @Override
-    public void updateRecipes(ItemInstance filter, Boolean getUses) {
+    public void updateRecipes(ItemStack filter, Boolean getUses) {
         lastIndex = 0;
         recipes.clear();
         for (Object obj : recipesComplete.keySet()) {
             boolean addRecipe = false;
-            ItemInstance[] inputs;
-            if (obj instanceof ItemInstance[]) {
-                inputs = (ItemInstance[]) obj;
+            ItemStack[] inputs;
+            if (obj instanceof ItemStack[]) {
+                inputs = (ItemStack[]) obj;
             } else {
-                inputs = new ItemInstance[]{(ItemInstance) obj};
+                inputs = new ItemStack[]{(ItemStack) obj};
             }
-            ItemInstance[] outputs;
-            if (recipesComplete.get(obj) instanceof ItemInstance[]) {
-                outputs = (ItemInstance[]) recipesComplete.get(obj);
+            ItemStack[] outputs;
+            if (recipesComplete.get(obj) instanceof ItemStack[]) {
+                outputs = (ItemStack[]) recipesComplete.get(obj);
             } else {
-                outputs = new ItemInstance[]{(ItemInstance) recipesComplete.get(obj)};
+                outputs = new ItemStack[]{(ItemStack) recipesComplete.get(obj)};
             }
             if (filter == null) {
                 addRecipe = true;
             } else if (getUses) {
                 for (int i = 0; i < inputs.length; i++) {
-                    if (inputs[i].itemId == filter.itemId && (inputs[i].getDamage() == filter.getDamage() || inputs[i].getDamage() < 0 || !inputs[i].usesMeta())) {
+                    if (inputs[i].itemId == filter.itemId && (inputs[i].getDamage() == filter.getDamage() || inputs[i].getDamage() < 0 || !inputs[i].method_719())) {
                         addRecipe = true;
                         break;
                     }
                 }
             } else {
                 for (int i = 0; i < outputs.length; i++) {
-                    if (outputs[i].itemId == filter.itemId && (outputs[i].getDamage() == filter.getDamage() || outputs[i].getDamage() < 0 || !outputs[i].usesMeta())) {
+                    if (outputs[i].itemId == filter.itemId && (outputs[i].getDamage() == filter.getDamage() || outputs[i].getDamage() < 0 || !outputs[i].method_719())) {
                         addRecipe = true;
                         break;
                     }
                 }
             }
             if (addRecipe) {
-                ItemInstance[] recipe = Arrays.copyOf(inputs, inputSlots + outputSlots);
+                ItemStack[] recipe = Arrays.copyOf(inputs, inputSlots + outputSlots);
                 System.arraycopy(outputs, 0, recipe, inputSlots, outputs.length);
                 recipes.add(recipe);
             }
@@ -146,11 +146,11 @@ public class TabGenericBlock extends Tab {
     }
 
     @Override
-    public ItemInstance getTabItem() {
-        return new ItemInstance(tabBlock, 1, metadata);
+    public ItemStack getTabItem() {
+        return new ItemStack(tabBlock, 1, metadata);
     }
 
-    public ItemInstance getBlockToDraw() {
+    public ItemStack getBlockToDraw() {
         return getTabItem();
     }
 
@@ -178,7 +178,7 @@ public class TabGenericBlock extends Tab {
     }
 
     @Override
-    public Class<? extends ContainerBase> getGuiClass() {
+    public Class<? extends ContainerScreen> getGuiClass() {
         return null;
     }
 

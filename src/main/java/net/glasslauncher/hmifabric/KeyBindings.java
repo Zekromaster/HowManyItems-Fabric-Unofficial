@@ -1,6 +1,6 @@
 package net.glasslauncher.hmifabric;
 
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import org.lwjgl.input.Keyboard;
 
 public class KeyBindings {

@@ -1,15 +1,15 @@
 package net.glasslauncher.hmifabric;
 
-import net.minecraft.container.ContainerBase;
-import net.minecraft.container.slot.Slot;
-import net.minecraft.entity.player.PlayerBase;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Container;
+import net.minecraft.screen.slot.Slot;
 
 
-public class ContainerRecipeViewer extends ContainerBase {
+public class ContainerRecipeViewer extends Container {
 
     public ContainerRecipeViewer(InventoryRecipeViewer iinventory) {
         //setting the windowId to -1 prevents server registering recipe clicks as inventory clicks
-        this.currentContainerId = -1;
+        this.syncId = -1;
         inv = iinventory;
         resetSlots();
     }
@@ -21,11 +21,11 @@ public class ContainerRecipeViewer extends ContainerBase {
 
     // Not an override. Custom method.
     public void addSlot(int i, int j) {
-        addSlot(new Slot(inv, count++, i, j));
+        method_2079(new Slot(inv, count++, i, j));
     }
 
     @Override
-    public boolean canUse(PlayerBase entityplayer) {
+    public boolean method_2094(PlayerEntity entityplayer) {
         return inv.canPlayerUse(entityplayer);
     }
 

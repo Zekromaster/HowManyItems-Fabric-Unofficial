@@ -2,31 +2,32 @@ package net.glasslauncher.hmifabric.tabs;
 
 import com.mojang.serialization.Lifecycle;
 import net.glasslauncher.hmifabric.HowManyItems;
-import net.glasslauncher.hmifabric.HowManyItemsClient;
 import net.glasslauncher.hmifabric.TabUtils;
-import net.minecraft.client.gui.screen.container.ContainerBase;
-import net.minecraft.item.ItemInstance;
+import net.minecraft.client.gui.screen.container.ContainerScreen;
+import net.minecraft.item.ItemStack;
 import net.modificationstation.stationapi.api.registry.*;
+import net.modificationstation.stationapi.api.util.Identifier;
+import net.modificationstation.stationapi.api.util.Namespace;
 
 import java.util.*;
 
 public class TabRegistry extends SimpleRegistry<Tab> {
-    private static final Tab EMPTY = new Tab(ModID.MINECRAFT, 0, 0, 0, 0, 0) {
+    private static final Tab EMPTY = new Tab(Namespace.MINECRAFT, 0, 0, 0, 0, 0) {
         @Override
-        public ItemInstance getTabItem() {
+        public ItemStack getTabItem() {
             return null;
         }
 
         @Override
-        public ItemInstance[][] getItems(int index, ItemInstance filter) {
-            return new ItemInstance[0][];
+        public ItemStack[][] getItems(int index, ItemStack filter) {
+            return new ItemStack[0][];
         }
 
         @Override
         public void draw(int x, int y, int recipeOnThisPageIndex, int cursorX, int cursorY) {}
 
         @Override
-        public Class<? extends ContainerBase> getGuiClass() {
+        public Class<? extends ContainerScreen> getGuiClass() {
             return null;
         }
     };
@@ -42,13 +43,13 @@ public class TabRegistry extends SimpleRegistry<Tab> {
     /**
      * Use this over Regsitry.register, otherwise you'll have errors and crashes.
      */
-    public void register(Identifier identifier, Tab tab, ItemInstance displayItem) {
+    public void register(Identifier identifier, Tab tab, ItemStack displayItem) {
         Registry.register(this, identifier, tab);
         TabUtils.putItemGui(tab.getGuiClass(), displayItem);
         tabOrder.add(tab);
     }
 
-    public void addEquivalentCraftingStation(Identifier identifier, ItemInstance displayitem) {
+    public void addEquivalentCraftingStation(Identifier identifier, ItemStack displayitem) {
         //noinspection ConstantConditions
         INSTANCE.get(identifier).equivalentCraftingStations.add(displayitem);
     }

@@ -3,18 +3,18 @@ package net.glasslauncher.hmifabric;
 import net.fabricmc.loader.api.FabricLoader;
 import net.glasslauncher.hmifabric.mixin.access.ContainerBaseAccessor;
 import net.glasslauncher.hmifabric.tabs.Tab;
+import net.minecraft.class_583;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.container.ContainerBase;
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.render.RenderHelper;
-import net.minecraft.client.render.entity.ItemRenderer;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.container.ContainerScreen;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.render.item.ItemRenderer;
 import net.minecraft.client.resource.language.TranslationStorage;
-import net.minecraft.container.slot.Slot;
-import net.minecraft.item.ItemBase;
-import net.minecraft.item.ItemInstance;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeRegistry;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.recipe.CraftingRecipe;
+import net.minecraft.recipe.CraftingRecipeManager;
+import net.minecraft.screen.slot.Slot;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.GL11;
 
@@ -23,10 +23,10 @@ import java.lang.reflect.*;
 import java.util.*;
 
 public class Utils {
-    private static ArrayList<ItemInstance> allItems;
+    private static ArrayList<ItemStack> allItems;
     public static ItemRenderer itemRenderer = new ItemRenderer();
     public static Random rand = new Random();
-    public static DrawableHelper gui = new DrawableHelper();
+    public static DrawContext gui = new DrawContext();
 
     @SuppressWarnings("deprecation")
     public static Minecraft getMC() {
@@ -38,29 +38,29 @@ public class Utils {
     private static final String resourcesFolder = "/hmi/resources/";
 
     //Returns the translated name of an itemstack with its ID if config allows and ID is wanted
-    public static String getNiceItemName(ItemInstance item, boolean withID) {
-        String s = TranslationStorage.getInstance().method_995(item.getTranslationKey());
+    public static String getNiceItemName(ItemStack item, boolean withID) {
+        String s = TranslationStorage.getInstance().getClientTranslation(item.getTranslationKey());
         if (s == null || s.length() == 0) {
             s = item.getTranslationKey();
             if (s == null) s = "null";
         }
         if (Config.config.showItemIDs && withID) {
             s += " " + item.itemId;
-            if (item.usesMeta()) s += ":" + item.getDamage();
+            if (item.method_719()) s += ":" + item.getDamage();
         }
         return s;
     }
 
     //Returns the translated name of an itemstack with its ID if config allows
-    public static String getNiceItemName(ItemInstance item) {
+    public static String getNiceItemName(ItemStack item) {
         return getNiceItemName(item, true);
     }
 
     //Returns the item that the user is hovering in their inventory
-    public static ItemInstance hoveredItem(ContainerBase gui, int posX, int posY) {
+    public static ItemStack hoveredItem(ContainerScreen gui, int posX, int posY) {
         try {
             Slot slotAtPosition = ((ContainerBaseAccessor) gui).invokeGetSlot(posX, posY);
-            if (slotAtPosition != null) return slotAtPosition.getItem();
+            if (slotAtPosition != null) return slotAtPosition.getStack();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -68,28 +68,28 @@ public class Utils {
     }
 
     //Returns the list of all blocks and items (that I can find)
-    public static ArrayList<ItemInstance> itemList() {
+    public static ArrayList<ItemStack> itemList() {
         if (allItems == null) {
             ;
             allItems = new ArrayList<>();
 
-            ItemBase[] mcItemsList = ItemBase.byId;
-            for (ItemBase item : mcItemsList) {
+            Item[] mcItemsList = Item.ITEMS;
+            for (Item item : mcItemsList) {
                 if (item == null) {
                     continue;
                 }
                 HashSet<String> currentItemNames = new HashSet<>();
                 for (int dmg = 0; ; dmg++) {
-                    ItemInstance itemstack = new ItemInstance(item, 1, dmg);
-                    for (ItemInstance hiddenItem : GuiOverlay.hiddenItems) {
-                        if (itemstack.isDamageAndIDIdentical(hiddenItem)) {
+                    ItemStack itemstack = new ItemStack(item, 1, dmg);
+                    for (ItemStack hiddenItem : GuiOverlay.hiddenItems) {
+                        if (itemstack.isItemEqual(hiddenItem)) {
                             itemstack = hiddenItem;
                             break;
                         }
                     }
                     try {
-                        int l = item.getTexturePosition(itemstack);
-                        String s = TranslationStorage.getInstance().method_995(itemstack.getTranslationKey());
+                        int l = item.method_439(itemstack);
+                        String s = TranslationStorage.getInstance().getClientTranslation(itemstack.getTranslationKey());
                         if (s.length() == 0) s = itemstack.getTranslationKey() + "@" + l;
                         if (dmg >= 4 && (s.contains(String.valueOf(dmg)) || s.contains(String.valueOf(dmg + 1)) || s.contains(String.valueOf(dmg - 1)))) {
                             break;
@@ -111,17 +111,17 @@ public class Utils {
 
             //This field should *only* ever contain things that implement Recipe, so this cast is fine.
             //noinspection unchecked
-            List<Recipe> recipes = (List<Recipe>) RecipeRegistry.getInstance().getRecipes();
-            for (Recipe recipe : recipes) {
-                if (recipe != null && recipe.getOutput() != null && recipe.getOutput().getType() != null) {
-                    ItemInstance itemstack = new ItemInstance(recipe.getOutput().getType(), 1, recipe.getOutput().getDamage());
-                    for (ItemInstance hiddenItem : GuiOverlay.hiddenItems) {
-                        if (itemstack.isDamageAndIDIdentical(hiddenItem)) {
+            List<CraftingRecipe> recipes = (List<CraftingRecipe>) CraftingRecipeManager.getInstance().getRecipes();
+            for (CraftingRecipe recipe : recipes) {
+                if (recipe != null && recipe.getOutput() != null && recipe.getOutput().getItem() != null) {
+                    ItemStack itemstack = new ItemStack(recipe.getOutput().getItem(), 1, recipe.getOutput().getDamage());
+                    for (ItemStack hiddenItem : GuiOverlay.hiddenItems) {
+                        if (itemstack.isItemEqual(hiddenItem)) {
                             itemstack = hiddenItem;
                             break;
                         }
                     }
-                    if (!itemstack.usesMeta()) {
+                    if (!itemstack.method_719()) {
                         continue;
                     }
                     addItemInOrder(allItems, itemstack);
@@ -133,9 +133,9 @@ public class Utils {
         return allItems;
     }
 
-    public static void addItemInOrder(ArrayList<ItemInstance> itemList, ItemInstance itemstack) {
-        for (ItemInstance item : itemList) {
-            if (item.isDamageAndIDIdentical(itemstack)) {
+    public static void addItemInOrder(ArrayList<ItemStack> itemList, ItemStack itemstack) {
+        for (ItemStack item : itemList) {
+            if (item.isItemEqual(itemstack)) {
                 return;
             }
             if (item.itemId > itemstack.itemId || (item.itemId == itemstack.itemId && item.getDamage() > itemstack.getDamage())) {
@@ -146,7 +146,7 @@ public class Utils {
     }
 
     //Returns the default list of items that are hidden in the overlay
-    public static ArrayList<ItemInstance> hiddenItems = new ArrayList<>();
+    public static ArrayList<ItemStack> hiddenItems = new ArrayList<>();
 
     //Returns the number of enabled tabs
     public static int visibleTabSize() {
@@ -158,7 +158,7 @@ public class Utils {
         return largestIndex + 1;
     }
 
-    public static void drawScaledItem(ItemInstance item, int x, int y, int length) {
+    public static void drawScaledItem(ItemStack item, int x, int y, int length) {
         GL11.glPushMatrix();
         float scaleFactor = (float) length / 16;
         GL11.glScalef(scaleFactor, scaleFactor, 1);
@@ -178,13 +178,13 @@ public class Utils {
     public static void drawArrow(int x, int y) {
         disableLighting();
         bindTexture();
-        gui.blit(x, y, 0, 63, 25, 25);
+        gui.drawTexture(x, y, 0, 63, 25, 25);
     }
 
     public static void drawSlot(int x, int y) {
         disableLighting();
         bindTexture();
-        gui.blit(x, y, 25, 63, 25, 25);
+        gui.drawTexture(x, y, 25, 63, 25, 25);
     }
 
     public static void drawTooltip(String s, int x, int y) {
@@ -199,9 +199,9 @@ public class Utils {
             disableLighting();
             int k1 = tooltipX + 12;
             int i2 = tooltipY - 12;
-            int j2 = getMC().textRenderer.getTextWidth(tooltipText);
+            int j2 = getMC().textRenderer.getWidth(tooltipText);
             drawRect(k1 - 3, i2 - 3, k1 + j2 + 3, i2 + 8 + 3, 0xc0000000);
-            getMC().textRenderer.drawTextWithShadow(tooltipText, k1, i2, -1);
+            getMC().textRenderer.drawWithShadow(tooltipText, k1, i2, -1);
             tooltipText = null;
             postRender();
         }
@@ -239,7 +239,7 @@ public class Utils {
         }
     }
 
-    public static void drawItemStack(int x, int y, ItemInstance item, boolean drawOverlay) {
+    public static void drawItemStack(int x, int y, ItemStack item, boolean drawOverlay) {
         localTextureBound = false;
         enableItemLighting();
         itemRenderer.method_1487(getMC().textRenderer, getMC().textureManager, item, x, y);
@@ -254,7 +254,7 @@ public class Utils {
             GL11.glEnable(32826 /*GL_RESCALE_NORMAL_EXT*/);
             GL11.glPushMatrix();
             GL11.glRotatef(120F, 1.0F, 0.0F, 0.0F);
-            RenderHelper.enableLighting();
+            class_583.method_1930();
             GL11.glPopMatrix();
             itemLighting = true;
         }
@@ -271,7 +271,7 @@ public class Utils {
         disableLighting();
         int k1 = (x) + 12;
         int i2 = y - 12;
-        getMC().textRenderer.drawTextWithShadow(s, k1, i2, -1);
+        getMC().textRenderer.drawWithShadow(s, k1, i2, -1);
     }
 
     public static void preRender() {
@@ -283,7 +283,7 @@ public class Utils {
 
     public static void postRender() {
         lighting = null;
-        RenderHelper.disableLighting();
+        class_583.method_1927();
         enableLighting();
     }
 
@@ -345,7 +345,7 @@ public class Utils {
     }
 
     public static boolean isKeyDown(KeyBinding keybind) {
-        return isKeyDown(keybind.key);
+        return isKeyDown(keybind.code);
     }
 
     public static boolean isKeyDown(int keyCode) {
@@ -353,11 +353,11 @@ public class Utils {
     }
 
     public static boolean keyEquals(int keyCode, KeyBinding keybind) {
-        return keyCode == keybind.key && keybindValid(keybind);
+        return keyCode == keybind.code && keybindValid(keybind);
     }
 
     public static boolean keybindValid(KeyBinding keybind) {
-        return keyCodeValid(keybind.key);
+        return keyCodeValid(keybind.code);
     }
 
     public static boolean keyCodeValid(int keyCode) {
