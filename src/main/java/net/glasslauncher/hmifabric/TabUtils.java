@@ -38,7 +38,4 @@ public class TabUtils {
         //noinspection ConstantConditions
         furnaceTab.equivalentCraftingStations.add(item);
     }
-
-    public static void addHiddenModItems(ArrayList<ItemStack> itemList) {
-    }
 }

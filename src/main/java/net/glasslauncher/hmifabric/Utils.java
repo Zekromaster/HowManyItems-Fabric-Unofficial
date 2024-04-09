@@ -1,6 +1,7 @@
 package net.glasslauncher.hmifabric;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.glasslauncher.hmifabric.event.HMIItemListRefreshEvent;
 import net.glasslauncher.hmifabric.mixin.access.ContainerBaseAccessor;
 import net.glasslauncher.hmifabric.tabs.Tab;
 import net.minecraft.class_583;
@@ -127,7 +128,7 @@ public class Utils {
                     addItemInOrder(allItems, itemstack);
                 }
             }
-            TabUtils.addHiddenModItems(allItems);
+            FabricLoader.getInstance().getEntrypoints(HowManyItems.MODID.id("item_list_refresh").toString(), HMIItemListRefreshEvent.class).forEach(hmiItemListRefreshEvent -> hmiItemListRefreshEvent.refreshItemList(allItems));
 
         }
         return allItems;

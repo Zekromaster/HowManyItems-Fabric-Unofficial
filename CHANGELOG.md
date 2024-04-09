@@ -1,5 +1,8 @@
 # Changelog
 
+## [5.2.0]
+- Added a new event, called HMIItemListRefreshEvent. Entrypoint is `hmifabric:item_list_refresh`
+
 ## [5.1.0]
 - Updated to latest StAPI (2.0-alpha.1)
 
