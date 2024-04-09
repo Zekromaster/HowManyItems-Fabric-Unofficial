@@ -6,5 +6,5 @@ import java.util.*;
 
 public interface HMIItemListRefreshEvent {
 
-    void refreshItemList(List<ItemStack> allItems);
+    void refreshItemList(ArrayList<ItemStack> allItems);
 }
