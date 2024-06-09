@@ -1,5 +1,8 @@
 # Changelog
 
+## [5.2.1]
+- Fixed a crash when opening the recipe view tab order GUI 
+
 ## [5.2.0]
 - Added a new event, called HMIItemListRefreshEvent. Entrypoint is `hmifabric:item_list_refresh`
 

@@ -43,9 +43,9 @@ public class GuiTabOrder extends Screen {
         top = 32;
         slotHeight = 21;
         currentTabs = HowManyItemsClient.getTabs();
+        allTabs = HowManyItemsClient.getTabs();
         newOrder = new Tab[allTabs.size()];
         tabEnabled = new boolean[allTabs.size()];
-        allTabs = HowManyItemsClient.getTabs();
     }
 
     @Override
